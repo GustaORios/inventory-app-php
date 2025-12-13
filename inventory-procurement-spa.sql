@@ -35,6 +35,43 @@ CREATE TABLE `inventory` (
   `NextExpirationDate` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;*/
 
+-- users
+
+CREATE TABLE `users` (
+  `UserId` INT NOT NULL AUTO_INCREMENT,
+  `Username` VARCHAR(50) NOT NULL,
+  `PasswordHash` VARCHAR(255) NOT NULL,
+  `Role` ENUM('admin','manager','picker','supplier','vendor') NOT NULL,
+  `Email` VARCHAR(100) NOT NULL,
+  `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+  `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`UserId`),
+  UNIQUE KEY `uk_users_email` (`Email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+--
+
+INSERT INTO `users` 
+(`UserId`, `Username`, `PasswordHash`, `Role`, `Email`, `IsActive`, `CreatedAt`, `UpdatedAt`) VALUES
+(1, 'supplier1', '$2y$10$abc123hashSupplier1', 'supplier', 'supplier1@updated.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 20:38:23'),
+(2, 'northtech', '$2y$10$abc123hashNorthTech', 'vendor', 'sales@northtech.ca', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(3, 'ecopack', '$2y$10$abc123hashEcoPack', 'vendor', 'info@ecopackaging.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(4, 'fastlogistics', '$2y$10$abc123hashFastLog', 'vendor', 'support@fastlogistics.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(5, 'indsafety', '$2y$10$abc123hashIndSafety', 'vendor', 'orders@industrialsafety.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(6, 'netsolutions', '$2y$10$abc123hashNetSol', 'vendor', 'sales@netsolutions.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(7, 'cleanessentials', '$2y$10$abc123hashCleanEss', 'vendor', 'contact@cleanessentials.com', TRUE, '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(8, 'proveedor', '$2y$10$abc123hashProveedor', 'supplier', 'newEmail@supplier.com', FALSE, '2025-12-12 16:53:42', '2025-12-12 16:59:07'),
+(9, 'northstar', '$2y$10$abc123hashNorthStar', 'supplier', 'northstar@supplies.com', TRUE, '2025-12-12 20:37:18', '2025-12-12 20:37:18'),
+(10, 'pacifictrade', '$2y$10$abc123hashPacific', 'vendor', 'pacific@tradeco.com', TRUE, '2025-12-12 20:40:00', '2025-12-12 20:40:00');
+
+--
+-- Insert user admin
+INSERT INTO `users` 
+(`UserId`, `Username`, `PasswordHash`, `Role`, `Email`, `IsActive`, `CreatedAt`, `UpdatedAt`) VALUES
+(11, 'admin', '$2y$10$Q9hXzYw7k1qYwFZkYzVZ7uFhQhXzYw7k1qYwFZkYzVZ7uFhQhXzY', 'admin', 'admin@saturn.com', TRUE, NOW(), NOW());
+
 -- --------------------------------------------------------
 
 --
@@ -174,30 +211,35 @@ INSERT INTO `purchaseorderitems` (`OrderId`, `ProductId`, `Quantity`, `PriceAtPu
 --
 
 CREATE TABLE `suppliers` (
-  `SupplierId` int NOT NULL,
-  `Name` varchar(225) COLLATE utf8mb4_general_ci NOT NULL,
-  `Email` varchar(225) COLLATE utf8mb4_general_ci NOT NULL,
-  `Role` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `Status` enum('Active','Inactive') COLLATE utf8mb4_general_ci NOT NULL,
-  `CreateAt` datetime NOT NULL,
-  `UpdateAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `SupplierId` INT NOT NULL AUTO_INCREMENT,
+  `UserId` INT NOT NULL, -- FK para users
+  `Name` VARCHAR(225) COLLATE utf8mb4_general_ci NOT NULL,
+  `Email` VARCHAR(100) NOT NULL,
+  `Address` VARCHAR(255) NOT NULL,
+  `Phone` VARCHAR(50) NOT NULL,
+  `CreateAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `UpdateAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SupplierId`),
+  CONSTRAINT fk_supplier_user FOREIGN KEY (`UserId`) REFERENCES `users`(`UserId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 --
 -- Volcado de datos para la tabla `suppliers`
 --
 
-INSERT INTO `suppliers` (`SupplierId`, `Name`, `Email`, `Role`, `Status`, `CreateAt`, `UpdateAt`) VALUES
-(1, 'Supplier One Updated', 'supplier1@updated.com', 'supplier', 'Active', '2025-12-12 12:49:15', '2025-12-12 20:38:23'),
-(2, 'North Tech Distribution', 'sales@northtech.ca', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(3, 'Eco Packaging Ltd', 'info@ecopackaging.com', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(4, 'Fast Logistics Inc', 'support@fastlogistics.com', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(5, 'Industrial Safety Co', 'orders@industrialsafety.com', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(6, 'Network Solutions Group', 'sales@netsolutions.com', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(7, 'Cleaning Essentials Ltd', 'contact@cleanessentials.com', 'vendor', 'Active', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
-(8, 'Proveedor Test', 'newEmail@supplier.com', 'supplier', 'Inactive', '2025-12-12 16:53:42', '2025-12-12 16:59:07'),
-(9, 'NorthStar Supplies', 'northstar@supplies.com', 'supplier', 'Active', '2025-12-12 20:37:18', '2025-12-12 20:37:18'),
-(10, 'Pacific Trade Co.', 'pacific@trade.com', 'supplier', 'Active', '2025-12-12 20:37:28', '2025-12-12 20:37:28');
+INSERT INTO `suppliers` 
+(`SupplierId`, `UserId`, `Name`, `Email`, `Address`, `Phone`, `CreateAt`, `UpdateAt`) VALUES
+(1, 1, 'Supplier One Updated', 'supplier1@updated.com', '123 Supplier St, Toronto, ON', '+1-555-111-2222', '2025-12-12 12:49:15', '2025-12-12 20:38:23'),
+(2, 2, 'North Tech Distribution', 'sales@northtech.ca', '456 Tech Ave, Vancouver, BC', '+1-555-222-3333', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(3, 3, 'Eco Packaging Ltd', 'info@ecopackaging.com', '789 Green Rd, Calgary, AB', '+1-555-333-4444', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(4, 4, 'Fast Logistics Inc', 'support@fastlogistics.com', '101 Speed Blvd, Montreal, QC', '+1-555-444-5555', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(5, 5, 'Industrial Safety Co', 'orders@industrialsafety.com', '202 Safety Way, Ottawa, ON', '+1-555-555-6666', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(6, 6, 'Network Solutions Group', 'sales@netsolutions.com', '303 Net St, Edmonton, AB', '+1-555-666-7777', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(7, 7, 'Cleaning Essentials Ltd', 'contact@cleanessentials.com', '404 Clean Ave, Winnipeg, MB', '+1-555-777-8888', '2025-12-12 12:49:15', '2025-12-12 12:49:15'),
+(8, 8, 'Proveedor Test', 'newEmail@supplier.com', '505 Test Rd, Mexico City', '+52-555-888-9999', '2025-12-12 16:53:42', '2025-12-12 16:59:07'),
+(9, 9, 'NorthStar Supplies', 'northstar@supplies.com', '606 Star Blvd, Seattle, WA', '+1-555-999-0000', '2025-12-12 20:37:18', '2025-12-12 20:37:18'),
+(10, 10, 'Pacific Trade Co.', 'pacific@tradeco.com', '707 Pacific St, San Francisco, CA', '+1-555-000-1111', '2025-12-12 20:40:00', '2025-12-12 20:40:00');
 
 --
 -- Índices para tablas volcadas
@@ -232,10 +274,6 @@ ALTER TABLE `purchaseorderitems`
   ADD KEY `fk_poitems_product` (`ProductId`);
 
 --
--- Indices de la tabla `suppliers`
---
-ALTER TABLE `suppliers`
-  ADD PRIMARY KEY (`SupplierId`,`Email`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -252,12 +290,6 @@ ALTER TABLE `products`
 --
 ALTER TABLE `purchaseorder`
   MODIFY `OrderId` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT de la tabla `suppliers`
---
-ALTER TABLE `suppliers`
-  MODIFY `SupplierId` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Restricciones para tablas volcadas

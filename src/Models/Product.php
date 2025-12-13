@@ -17,13 +17,10 @@ class Product
 
     public function __construct()
     {
-        require_once __DIR__ . '/../Common/config.php';
-
+        $this->conn = require __DIR__ . '/../Common/config.php';
         if (!isset($conn) || !($conn instanceof \mysqli)) {
             throw new \Exception("Database connection not available. Check config.php");
         }
-
-        $this->conn = $conn;
     }
 
     // GET ALL

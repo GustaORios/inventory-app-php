@@ -4,16 +4,19 @@ namespace Src\Controllers;
 
 use Src\Common\Response;
 use Src\Models\Supplier;
+use Src\Models\User;
 use Src\Common\Audit;
 use Src\Common\Logger;
 
 class SupplierController
 {
     private $supplierModel;
+    private $userModel;
 
     public function __construct()
     {
         $this->supplierModel = new Supplier();
+        $this->userModel = new User();
     }
 
     public function getAll()
@@ -47,25 +50,41 @@ class SupplierController
     {
         try {
             $input = json_decode(file_get_contents("php://input"), true);
-
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
                 return;
             }
 
-            $required = ['name', 'email', 'role', 'status'];
-            foreach ($required as $field) {
+            $requiredUser = ['username', 'email', 'password', 'role'];
+            $requiredSupplier = ['name', 'address', 'phone'];
+
+            foreach ($requiredUser as $field) {
                 if (!isset($input[$field]) || trim($input[$field]) === '') {
-                    Response::error("Missing field: {$field}", 400);
+                    Response::error("Missing user field: {$field}", 400);
                     return;
                 }
             }
 
-            $newSupplierId = $this->supplierModel->create($input);
+            foreach ($requiredSupplier as $field) {
+                if (!isset($input[$field]) || trim($input[$field]) === '') {
+                    Response::error("Missing supplier field: {$field}", 400);
+                    return;
+                }
+            }
+
+            $userId = $this->userModel->create($input);
+
+            $newSupplierId = $this->supplierModel->create([
+                'userId'  => $userId,
+                'name'    => $input['name'],
+                'email'   => $input['email'],
+                'address' => $input['address'],
+                'phone'   => $input['phone']
+            ]);
 
             Audit::created('Supplier', (int)$newSupplierId);
 
-            Response::json(['id' => $newSupplierId], 201, "Supplier created successfully.");
+            Response::json(['id' => $newSupplierId, 'userId' => $userId], 201, "Supplier created successfully.");
         } catch (\Exception $e) {
             Logger::error("SupplierController@create: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
