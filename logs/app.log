@@ -1,0 +1,12 @@
+[2025-12-13 04:37:18][INFO] Supplier created. ID: 9
+[2025-12-13 04:37:28][INFO] Supplier created. ID: 10
+[2025-12-13 04:37:47][INFO] Supplier updated. ID: 1
+[2025-12-13 04:38:23][INFO] Supplier updated. ID: 1
+[2025-12-13 04:39:03][ERROR] ProductController@create: Column 'Category' cannot be null
+[2025-12-13 04:39:20][ERROR] ProductController@create: Column 'Category' cannot be null
+[2025-12-13 04:39:46][INFO] Product updated. ID: 1
+[2025-12-13 04:40:01][INFO] Product updated. ID: 1
+[2025-12-13 04:40:28][INFO] PurchaseOrder created. ID: 12
+[2025-12-13 04:40:48][INFO] PurchaseOrder updated. ID: 1
+[2025-12-13 04:41:20][ERROR] ProductController@create: Column 'Category' cannot be null
+[2025-12-13 04:42:13][INFO] Product created. ID: 32

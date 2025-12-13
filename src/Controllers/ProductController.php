@@ -3,26 +3,26 @@
 namespace Src\Controllers;
 
 use Src\Common\Response;
-use Src\Models\Supplier;
+use Src\Models\Product;
 use Src\Common\Audit;
 use Src\Common\Logger;
 
-class SupplierController
+class ProductController
 {
-    private $supplierModel;
+    private $productModel;
 
     public function __construct()
     {
-        $this->supplierModel = new Supplier();
+        $this->productModel = new Product();
     }
 
     public function getAll()
     {
         try {
-            $suppliers = $this->supplierModel->getAll();
-            Response::json(['suppliers' => $suppliers], 200, "List of suppliers fetched successfully.");
+            $products = $this->productModel->getAll();
+            Response::json(['products' => $products], 200, "List of products fetched successfully.");
         } catch (\Exception $e) {
-            Logger::error("SupplierController@getAll: " . $e->getMessage());
+            Logger::error("ProductController@getAll: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
@@ -30,15 +30,15 @@ class SupplierController
     public function getById($id)
     {
         try {
-            $supplier = $this->supplierModel->getById($id);
+            $product = $this->productModel->getById($id);
 
-            if ($supplier) {
-                Response::json($supplier, 200, "Supplier fetched successfully.");
+            if ($product) {
+                Response::json($product, 200, "Product fetched successfully.");
             } else {
-                Response::error("Supplier not found.", 404);
+                Response::error("Product not found.", 404);
             }
         } catch (\Exception $e) {
-            Logger::error("SupplierController@getById: " . $e->getMessage());
+            Logger::error("ProductController@getById: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
@@ -53,21 +53,21 @@ class SupplierController
                 return;
             }
 
-            $required = ['name', 'email', 'role', 'status'];
+            $required = ['name', 'sku', 'price'];
             foreach ($required as $field) {
-                if (!isset($input[$field]) || trim($input[$field]) === '') {
+                if (!isset($input[$field]) || (is_string($input[$field]) && trim($input[$field]) === '')) {
                     Response::error("Missing field: {$field}", 400);
                     return;
                 }
             }
 
-            $newSupplierId = $this->supplierModel->create($input);
+            $newProductId = $this->productModel->create($input);
 
-            Audit::created('Supplier', (int)$newSupplierId);
+            Audit::created('Product', (int)$newProductId);
 
-            Response::json(['id' => $newSupplierId], 201, "Supplier created successfully.");
+            Response::json(['id' => $newProductId], 201, "Product created successfully.");
         } catch (\Exception $e) {
-            Logger::error("SupplierController@create: " . $e->getMessage());
+            Logger::error("ProductController@create: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
@@ -75,16 +75,16 @@ class SupplierController
     public function delete($id)
     {
         try {
-            $deleted = $this->supplierModel->delete($id);
+            $deleted = $this->productModel->delete($id);
 
             if ($deleted) {
-                Audit::deleted('Supplier', (int)$id);
-                Response::json(null, 200, "Supplier deleted successfully.");
+                Audit::deleted('Product', (int)$id);
+                Response::json(null, 200, "Product deleted successfully.");
             } else {
-                Response::error("Supplier not found.", 404);
+                Response::error("Product not found.", 404);
             }
         } catch (\Exception $e) {
-            Logger::error("SupplierController@delete: " . $e->getMessage());
+            Logger::error("ProductController@delete: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
@@ -99,16 +99,16 @@ class SupplierController
                 return;
             }
 
-            $updated = $this->supplierModel->update($id, $input);
+            $updated = $this->productModel->update($id, $input);
 
             if ($updated) {
-                Audit::updated('Supplier', (int)$id);
-                Response::json(null, 200, "Supplier updated successfully.");
+                Audit::updated('Product', (int)$id);
+                Response::json(null, 200, "Product updated successfully.");
             } else {
-                Response::error("Supplier not found.", 404);
+                Response::error("Product not found.", 404);
             }
         } catch (\Exception $e) {
-            Logger::error("SupplierController@update: " . $e->getMessage());
+            Logger::error("ProductController@update: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
