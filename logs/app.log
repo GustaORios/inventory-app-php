@@ -10,3 +10,7 @@
 [2025-12-13 04:40:48][INFO] PurchaseOrder updated. ID: 1
 [2025-12-13 04:41:20][ERROR] ProductController@create: Column 'Category' cannot be null
 [2025-12-13 04:42:13][INFO] Product created. ID: 32
+[2025-12-13 19:46:52][ERROR] PurchaseOrderController@update: Invalid status. Allowed: PENDING, APPROVED, CANCELLED, RECEIVED
+[2025-12-13 19:47:04][INFO] PurchaseOrder updated. ID: 12
+[2025-12-13 19:48:12][INFO] PurchaseOrder updated. ID: 12
+[2025-12-13 19:48:44][INFO] PurchaseOrder updated. ID: 12
