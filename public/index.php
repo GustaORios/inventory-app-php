@@ -12,24 +12,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// ==========================================================
-// AUTOLOADER CORRIGIDO (FIX CRÍTICO NA LINHA 31)
-// ==========================================================
 spl_autoload_register(function ($class) {
     $prefix = 'Src\\';
     $base_dir = __DIR__ . '/../src/'; 
     $len = strlen($prefix);
-    
-    // 1. Verifica o prefixo (Src\)
+
     if (strncmp($prefix, $class, $len) !== 0) return;
-    
-    // 2. Remove o prefixo (Ex: Models\Product)
+
     $relative_class = substr($class, $len);
-    
-    // 3. CORREÇÃO FINAL: Substitui a ÚNICA barra invertida (\) por barra normal (/)
+
     $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php'; 
-    
-    // 4. Carrega o arquivo
+
     if (file_exists($file)) require $file;
 });
 
@@ -40,10 +33,6 @@ use Src\Common\Response;
 session_start();
 
 $router = new Router();
-
-// ==========================================================
-// ROTAS COMPLETAS
-// ==========================================================
 
 // Suppliers routes
 $router->add('GET', '/suppliers', 'SupplierController@getAll');
@@ -84,32 +73,21 @@ if (false !== $pos = strpos($uri, '?')) { // remove query string to avoid errors
 
 $uri = rawurldecode($uri);
 
-// Remove a parte do script name da URI para que o router funcione
+
 $scriptName = $_SERVER['SCRIPT_NAME']; 
 $basePath = str_replace('index.php', '', $scriptName);
 if (strpos($uri, $basePath) === 0) {
     $uri = substr($uri, strlen($basePath));
 }
 
-// -------------------------------------------------------------
-// CORREÇÃO CRÍTICA PARA O ERRO 404 NO POSTMAN (Inicio)
-// -------------------------------------------------------------
-
-// 1. Remove explicitamente 'index.php' se ele ainda estiver na URI
 if (strpos($uri, 'index.php') === 0) {
     $uri = substr($uri, strlen('index.php'));
 }
 
-// 2. Garante que a URI comece com uma única barra (/)
 if (empty($uri) || $uri[0] !== '/') {
     $uri = '/' . $uri;
 }
 
-// 3. Remove barras duplas (para /suppliers, a URI final será /suppliers)
 $uri = preg_replace('/\/+/', '/', $uri);
-
-// -------------------------------------------------------------
-// CORREÇÃO CRÍTICA PARA O ERRO 404 NO POSTMAN (Fim)
-// -------------------------------------------------------------
 
 $router->dispatch($uri, $method);

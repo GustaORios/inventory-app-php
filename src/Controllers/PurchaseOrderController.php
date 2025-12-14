@@ -5,8 +5,8 @@ use Src\Common\Response;
 use Src\Models\PurchaseOrder;
 use Src\Common\Audit;
 use Src\Common\Logger;
-use Src\Common\Sanitizer; // Necessário para a sanitização
-use Src\Models\Product;    // Essencial para o fluxo de estoque
+use Src\Common\Sanitizer; 
+use Src\Models\Product;    
 
 class PurchaseOrderController
 {
@@ -84,14 +84,13 @@ class PurchaseOrderController
             $oldStatus = strtoupper($currentOrder['status'] ?? '');
             $newStatus = isset($input['status']) ? strtoupper($input['status']) : $oldStatus;
 
-            // 3. Atualizar o Pedido no Model
+            
             $updated = $this->purchaseOrderModel->update((int)$id, $input);
 
             if ($updated) {
-                // 4. WORKFLOW: Se mudou para RECEIVED E o status anterior não era RECEIVED
+                
                 if ($newStatus === 'RECEIVED' && $oldStatus !== 'RECEIVED') {
                     
-                    // Rebusca o pedido ATUALIZADO (opcional, mas mais seguro para garantir itens)
                     $updatedOrder = $this->purchaseOrderModel->getById((int)$id); 
                     
                     if (!empty($updatedOrder['items'])) {
@@ -99,7 +98,7 @@ class PurchaseOrderController
                         $productModel = new Product(); 
                         
                         foreach ($updatedOrder['items'] as $item) {
-                            // Chama o método no Product Model
+                            
                             $productModel->addStock($item['productId'], $item['quantity']); 
                         }
                         Logger::info("Stock updated for Order ID: $id (Received)");

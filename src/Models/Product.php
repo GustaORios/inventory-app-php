@@ -3,7 +3,6 @@ namespace Src\Models;
 
 class Product
 {
-    // ... (Suas propriedades, ajustadas para o modelo DB) ...
     public $id;
     public $sku;
     public $name;
@@ -11,7 +10,7 @@ class Product
     public $brand;
     public $supplierId;
     public $price;
-    public $inStock; // Coluna de estoque
+    public $inStock; 
     public $createdAt;
     public $updatedAt;
 
@@ -19,7 +18,6 @@ class Product
 
     public function __construct()
     {
-        // Captura o objeto de conexão retornado pelo config.php
         $this->conn = require __DIR__ . '/../Common/config.php';
     }
 
@@ -128,7 +126,6 @@ class Product
             if (isset($data[$field])) {
                 $fields[] = ucfirst($field) . " = ?";
                 $values[] = $data[$field];
-                // Tipos: 's' para string, 'i' para int, 'd' para double/float. Ajustar se necessário
                 $types .= ($field === 'price' ? 'd' : (($field === 'supplierId' || $field === 'inStock') ? 'i' : 's'));
             }
         }
@@ -178,10 +175,8 @@ class Product
         return $affected;
     }
 
-    // Adiciona estoque (usado pelo PurchaseOrderController)
     public function addStock(int $id, int $quantity): bool
     {
-        // Usa prepared statement para prevenir SQL Injection
         $sql = "UPDATE Products SET InStock = InStock + ?, UpdateAt = NOW() WHERE ProductId = ?";
         
         $stmt = $this->conn->prepare($sql);
@@ -189,7 +184,6 @@ class Product
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
 
-        // 'ii' significa: primeiro parâmetro é inteiro (quantity), segundo é inteiro (id)
         $stmt->bind_param("ii", $quantity, $id); 
         if (!$stmt->execute()) {
              throw new \Exception("DB execute failed: " . $stmt->error);

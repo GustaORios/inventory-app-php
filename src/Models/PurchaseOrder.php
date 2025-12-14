@@ -8,7 +8,6 @@ class PurchaseOrder
 
     public function __construct()
     {
-        // Captura o objeto de conexão retornado pelo config.php
         $this->conn = require __DIR__ . '/../Common/config.php';
     }
 
@@ -66,8 +65,6 @@ class PurchaseOrder
             $stmt->close();
             return null;
         }
-
-        // Busca os itens do pedido. CORRIGIDO: Unit_Price -> PriceAtPurchase
         $itemsSql = "SELECT ProductId AS productId, Quantity AS quantity, PriceAtPurchase AS unitPrice 
                      FROM purchaseorderitems WHERE OrderId = ?";
         
@@ -98,13 +95,10 @@ class PurchaseOrder
         $this->conn->begin_transaction();
         
         try {
-            // 1. Inserir na tabela PurchaseOrder
             $orderSql = "INSERT INTO purchaseorder (SupplierId, TotalAmount, Status, OrderDate, CreateAt, UpdateAt) 
                          VALUES (?, ?, 'Pending', CURDATE(), NOW(), NOW())";
             $orderStmt = $this->conn->prepare($orderSql);
             if (!$orderStmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
-            
-            // O TotalAmount será atualizado depois, inserimos um placeholder
             $supplierId = $data['supplierId'];
             $zeroTotal = 0.00; 
             $orderStmt->bind_param("id", $supplierId, $zeroTotal);
@@ -113,9 +107,6 @@ class PurchaseOrder
             $orderStmt->close();
 
             $total = 0.00;
-            
-            // 2. Inserir na tabela OrderItems
-            // CORRIGIDO: Unit_Price -> PriceAtPurchase
             $itemSql = "INSERT INTO purchaseorderitems (OrderId, ProductId, Quantity, PriceAtPurchase) VALUES (?, ?, ?, ?)";
             $itemStmt = $this->conn->prepare($itemSql);
             if (!$itemStmt) throw new \Exception("DB prepare failed for items: " . $this->conn->error);
@@ -129,8 +120,6 @@ class PurchaseOrder
                 if (!$itemStmt->execute()) throw new \Exception("DB execute failed for item: " . $itemStmt->error);
             }
             $itemStmt->close();
-
-            // 3. Atualizar o TotalAmount na tabela PurchaseOrder
             $up = $this->conn->prepare("UPDATE purchaseorder SET TotalAmount = ? WHERE OrderId = ?");
             if (!$up) throw new \Exception("DB prepare failed: " . $this->conn->error);
 
@@ -199,7 +188,6 @@ class PurchaseOrder
         return $deleted;
     }
     
-    // Função auxiliar para obter o preço (necessário para calcular o TotalAmount)
     private function getProductPrice(int $productId): float
     {
         $stmt = $this->conn->prepare("SELECT Price FROM products WHERE ProductId = ?");

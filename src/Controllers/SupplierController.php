@@ -50,15 +50,15 @@ class SupplierController
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
-            // 1. Sanitização
+           
             $input = Sanitizer::cleanArray($input);
 
-            // 2. Validação de Email
+            
             if (!Sanitizer::validateEmail($input['email'])) {
                 Response::error("Invalid email format.", 400); return;
             }
 
-            // Validação de campos obrigatórios...
+            
             $required = ['name', 'email', 'role', 'status'];
             foreach ($required as $field) {
                 if (empty($input[$field])) { Response::error("Missing: {$field}", 400); return; }

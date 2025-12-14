@@ -20,15 +20,11 @@ class Logger
     {
         $logDir = dirname(self::$logFile);
 
-        // Asegurar que la carpeta exista
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
-
         $date = date('Y-m-d H:i:s');
         $line = "[$date][$level] $message" . PHP_EOL;
-
-        // Crea el archivo si no existe / agrega si existe
         file_put_contents(self::$logFile, $line, FILE_APPEND);
     }
 }

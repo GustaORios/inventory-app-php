@@ -15,7 +15,6 @@ class Supplier
 
     public function __construct()
     {
-        // Captura o objeto de conexão retornado pelo config.php
         $this->conn = require __DIR__ . '/../Common/config.php';
     }
 
