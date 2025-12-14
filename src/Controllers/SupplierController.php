@@ -2,6 +2,7 @@
 
 namespace Src\Controllers;
 
+use Src\Common\AccessControl;
 use Src\Common\Response;
 use Src\Models\Supplier;
 use Src\Models\User;
@@ -22,6 +23,11 @@ class SupplierController
     public function getAll()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $suppliers = $this->supplierModel->getAll();
             Response::json(['suppliers' => $suppliers], 200, "List of suppliers fetched successfully.");
         } catch (\Exception $e) {
@@ -33,6 +39,11 @@ class SupplierController
     public function getById($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $supplier = $this->supplierModel->getById($id);
 
             if ($supplier) {
@@ -49,6 +60,11 @@ class SupplierController
     public function create()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
@@ -94,6 +110,11 @@ class SupplierController
     public function delete($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $deleted = $this->supplierModel->delete($id);
 
             if ($deleted) {
@@ -111,6 +132,11 @@ class SupplierController
     public function update($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+            
             $input = json_decode(file_get_contents("php://input"), true);
 
             if (!$input) {
