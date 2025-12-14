@@ -1,6 +1,8 @@
 <?php
 namespace Src\Models;
 
+use Src\Common\Logger;
+
 class User
 {
     private $conn;
@@ -82,6 +84,7 @@ class User
             return $user;
         } else {
             return null; // Password does not match
+            Logger::info("User@authenticate: Failed login attempt for email '{$email}'.");
         }
 
     }

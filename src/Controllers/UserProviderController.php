@@ -81,6 +81,7 @@ class UserProviderController
             }
 
             Response::json(['message' => 'Login successful'], 200, "Welcome " . $_SESSION['userinfo']['username']);
+            Logger::info("UserProviderController@login: User '{$_SESSION['userinfo']['email']}' logged in successfully");
         } catch (\Exception $e) {
             Logger::error("UserProviderController@login: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
