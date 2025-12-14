@@ -33,24 +33,30 @@ $router = new Router();
 //suppliers route
 $router->add('GET', '/suppliers', 'SupplierController@getAll');
 $router->add('GET', '/suppliers/:id', 'SupplierController@getById');
-/*
 $router->add('POST', '/suppliers', 'SupplierController@create');
 $router->add('PUT', '/suppliers/:id', 'SupplierController@update');
 $router->add('PATCH', '/suppliers/:id', 'SupplierController@update');
-$router->add('DELETE', '/suppliers/:id', 'SupplierController@delete');*/
+$router->add('DELETE', '/suppliers/:id', 'SupplierController@delete');
+
 
 // purchase orders routers
-$router->add('GET',    '/purchase-orders',     'PurchaseOrderController@getAll');
-$router->add('GET',    '/purchase-orders/:id', 'PurchaseOrderController@getById');
-$router->add('POST',   '/purchase-orders',     'PurchaseOrderController@create');
-$router->add('PUT',    '/purchase-orders/:id', 'PurchaseOrderController@update');
-$router->add('DELETE', '/purchase-orders/:id', 'PurchaseOrderController@delete');
+$router->add('GET', '/purchaseorders', 'PurchaseOrderController@getAll');
+$router->add('GET', '/purchaseorders/:id', 'PurchaseOrderController@getById');
+$router->add('POST', '/purchaseorders', 'PurchaseOrderController@create');
+$router->add('PUT', '/purchaseorders/:id', 'PurchaseOrderController@update');
+$router->add('PATCH', '/purchaseorders/:id', 'PurchaseOrderController@update');
+$router->add('DELETE', '/purchaseorders/:id', 'PurchaseOrderController@delete');
+
+
+
 // products routers
-$router->add('GET',    '/products',     'ProductController@getAll');
-$router->add('GET',    '/products/:id', 'ProductController@getById');
-$router->add('POST',   '/products',     'ProductController@create');
-$router->add('PUT',    '/products/:id', 'ProductController@update');
+$router->add('GET', '/products', 'ProductController@getAll');
+$router->add('GET', '/products/:id', 'ProductController@getById');
+$router->add('POST', '/products', 'ProductController@create');
+$router->add('PUT', '/products/:id', 'ProductController@update');
+$router->add('PATCH', '/products/:id', 'ProductController@update');
 $router->add('DELETE', '/products/:id', 'ProductController@delete');
+
 // login router
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -68,7 +74,7 @@ if (strpos($uri, $scriptName) === 0) {
     $uri = substr($uri, strlen($scriptName)); // /...
 } 
 
-//echo $uri ; exit;
+// echo $uri ; exit;
 
 try {
     $router->dispatch($uri, $method);

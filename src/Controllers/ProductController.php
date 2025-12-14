@@ -3,65 +3,112 @@ namespace Src\Controllers;
 
 use Src\Common\Response;
 use Src\Models\Product;
+use Src\Common\Audit;
+use Src\Common\Logger;
 
-class ProductController {
-    
+class ProductController
+{
     private $productModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->productModel = new Product();
     }
 
-    public function getAll() {
+    public function getAll()
+    {
         try {
             $products = $this->productModel->getAll();
             Response::json(['products' => $products], 200, "List of products fetched successfully.");
         } catch (\Exception $e) {
+            Logger::error("ProductController@getAll: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 
-    public function getById($id) {
+    public function getById($id)
+    {
         try {
             $product = $this->productModel->getById($id);
-            if (!$product) {
-                return Response::error("Product not found", 404);
+
+            if ($product) {
+                Response::json($product, 200, "Product fetched successfully.");
+            } else {
+                Response::error("Product not found.", 404);
             }
-            Response::json(['product' => $product], 200, "Product details fetched.");
         } catch (\Exception $e) {
+            Logger::error("ProductController@getById: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 
-    public function create() {
+    public function create()
+    {
         try {
-            // Nota: Em um cenário real, capture o input do corpo da requisição aqui
-            $data = []; 
-            $result = $this->productModel->create($data);
-            Response::json(['result' => $result], 201, "Product created.");
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
+            }
+
+            $required = ['name', 'sku', 'price'];
+            foreach ($required as $field) {
+                if (!isset($input[$field]) || (is_string($input[$field]) && trim($input[$field]) === '')) {
+                    Response::error("Missing field: {$field}", 400);
+                    return;
+                }
+            }
+
+            $newProductId = $this->productModel->create($input);
+
+            Audit::created('Product', (int)$newProductId);
+
+            Response::json(['id' => $newProductId], 201, "Product created successfully.");
         } catch (\Exception $e) {
-            Response::error("Error creating product: " . $e->getMessage(), 500);
+            Logger::error("ProductController@create: " . $e->getMessage());
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 
-    public function update($id) {
+    public function delete($id)
+    {
         try {
-            $data = []; // Capturar input
-            $result = $this->productModel->update($id, $data);
-            Response::json(['result' => $result], 200, "Product updated.");
+            $deleted = $this->productModel->delete($id);
+
+            if ($deleted) {
+                Audit::deleted('Product', (int)$id);
+                Response::json(null, 200, "Product deleted successfully.");
+            } else {
+                Response::error("Product not found.", 404);
+            }
         } catch (\Exception $e) {
-            Response::error("Error updating product: " . $e->getMessage(), 500);
+            Logger::error("ProductController@delete: " . $e->getMessage());
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 
-    public function delete($id) {
+    public function update($id)
+    {
         try {
-            $result = $this->productModel->delete($id);
-            \Src\Models\AuditLog::log("DELETE_PRODUCT", "Product ID $id was deleted.");
-            Response::json(['result' => $result], 200, "Product deleted.");
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
+            }
+
+            $updated = $this->productModel->update($id, $input);
+
+            if ($updated) {
+                Audit::updated('Product', (int)$id);
+                Response::json(null, 200, "Product updated successfully.");
+            } else {
+                Response::error("Product not found.", 404);
+            }
         } catch (\Exception $e) {
-            Response::error("Error deleting product: " . $e->getMessage(), 500);
+            Logger::error("ProductController@update: " . $e->getMessage());
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 }
-?>
