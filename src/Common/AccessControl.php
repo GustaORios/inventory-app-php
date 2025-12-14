@@ -17,7 +17,7 @@ class AccessControl
 
         if (!isset($_SESSION['userinfo']) || !isset($_SESSION['userinfo']['role'])) {
             Response::error("Unauthorized: You must be logged in.", 401);
-            Logger::info("AccessControl@enforceRoles: Unauthorized access attempt.");
+            Logger::error("AccessControl@enforceRoles: Unauthorized access attempt.");
             exit; 
         }
 
