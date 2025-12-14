@@ -101,7 +101,7 @@ class Product
         $brand = $data['brand'];
         $supplierId = $data['supplierId'];
         $price = $data['price'];
-        $inStock = $data['inStock'] ?? 0; // Assume 0 se não for fornecido
+        $inStock = $data['inStock'] ?? 0; 
 
         $stmt->bind_param("ssssidi", $sku, $name, $category, $brand, $supplierId, $price, $inStock);
 
