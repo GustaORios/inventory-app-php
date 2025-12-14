@@ -22,3 +22,4 @@
 [2025-12-14 20:50:19][INFO] Supplier deleted. ID: 11
 [2025-12-14 20:57:55][INFO] Product deleted. ID: 32
 [2025-12-14 21:14:30][INFO] Product deleted. ID: 31
+[2025-12-14 21:34:13][ERROR] PurchaseOrderController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'WHERE SupplierId = ?' at line 11

@@ -14,7 +14,7 @@ class PurchaseOrder
         }
     }
 
-    public function getAll()
+    public function getAll($supplierId)
     {
         $sql = "SELECT 
                     OrderId AS id,
@@ -25,18 +25,29 @@ class PurchaseOrder
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM purchaseorder
+                WHERE SupplierId = ? 
                 ORDER BY OrderId DESC";
 
-        $result = $this->conn->query($sql);
-
-        if (!$result) {
-            throw new \Exception("DB query failed: " . $this->conn->error);
+        $stmt = $this->conn->prepare($sql);
+        
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
+
+        $stmt->bind_param("i", $supplierId);
+
+        if (!$stmt->execute()) {
+            throw new \Exception("DB execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
 
         $orders = [];
         while ($row = $result->fetch_assoc()) {
             $orders[] = $row;
         }
+
+        $stmt->close();
 
         return $orders;
     }
@@ -52,12 +63,13 @@ class PurchaseOrder
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM purchaseorder
-                WHERE OrderId = ?";
+                WHERE OrderId = ?
+                  AND SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
 
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("ii", $id, $_SESSION['userinfo']['id']);
         if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
 
         $result = $stmt->get_result();
