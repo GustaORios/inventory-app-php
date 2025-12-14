@@ -57,7 +57,10 @@ $router->add('PUT', '/products/:id', 'ProductController@update');
 $router->add('PATCH', '/products/:id', 'ProductController@update');
 $router->add('DELETE', '/products/:id', 'ProductController@delete');
 
-// login router
+// user router
+$router->add('POST', '/auth/login', 'UserProviderController@login');
+$router->add('POST', '/auth/logout', 'UserProviderController@logout');
+$router->add('POST', '/auth/register', 'UserProviderController@register');
 
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = $_SERVER['REQUEST_URI'];

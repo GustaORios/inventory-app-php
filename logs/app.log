@@ -15,3 +15,7 @@
 [2025-12-13 19:48:12][INFO] PurchaseOrder updated. ID: 12
 [2025-12-13 19:48:44][INFO] PurchaseOrder updated. ID: 12
 [2025-12-13 21:59:40][INFO] Supplier created. ID: 11
+[2025-12-14 02:13:13][ERROR] SupplierController@create: Duplicate entry 'gustavo@updated.com' for key 'users.uk_users_email'
+[2025-12-14 02:28:40][ERROR] SupplierController@create: Unknown column 'id' in 'field list'
+[2025-12-14 02:28:53][ERROR] SupplierController@create: Email already registered.
+[2025-12-14 02:47:31][ERROR] SupplierController@create: Email already registered.
