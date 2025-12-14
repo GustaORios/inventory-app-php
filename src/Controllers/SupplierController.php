@@ -6,7 +6,6 @@ use Src\Common\Response;
 use Src\Models\Supplier;
 use Src\Common\Audit;
 use Src\Common\Logger;
-use Src\Common\Sanitizer; 
 
 class SupplierController
 {
@@ -48,28 +47,28 @@ class SupplierController
     {
         try {
             $input = json_decode(file_get_contents("php://input"), true);
-            if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
-            // 1. Sanitização
-            $input = Sanitizer::cleanArray($input);
-
-            // 2. Validação de Email
-            if (!Sanitizer::validateEmail($input['email'])) {
-                Response::error("Invalid email format.", 400); return;
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
             }
 
-            // Validação de campos obrigatórios...
             $required = ['name', 'email', 'role', 'status'];
             foreach ($required as $field) {
-                if (empty($input[$field])) { Response::error("Missing: {$field}", 400); return; }
+                if (!isset($input[$field]) || trim($input[$field]) === '') {
+                    Response::error("Missing field: {$field}", 400);
+                    return;
+                }
             }
 
             $newSupplierId = $this->supplierModel->create($input);
+
             Audit::created('Supplier', (int)$newSupplierId);
+
             Response::json(['id' => $newSupplierId], 201, "Supplier created successfully.");
         } catch (\Exception $e) {
             Logger::error("SupplierController@create: " . $e->getMessage());
-            Response::error("Internal Server Error", 500);
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
 
@@ -86,6 +85,30 @@ class SupplierController
             }
         } catch (\Exception $e) {
             Logger::error("SupplierController@delete: " . $e->getMessage());
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
+        }
+    }
+
+    public function update($id)
+    {
+        try {
+            $input = json_decode(file_get_contents("php://input"), true);
+
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
+            }
+
+            $updated = $this->supplierModel->update($id, $input);
+
+            if ($updated) {
+                Audit::updated('Supplier', (int)$id);
+                Response::json(null, 200, "Supplier updated successfully.");
+            } else {
+                Response::error("Supplier not found.", 404);
+            }
+        } catch (\Exception $e) {
+            Logger::error("SupplierController@update: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }

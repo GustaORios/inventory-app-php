@@ -6,8 +6,6 @@ use Src\Common\Response;
 use Src\Models\PurchaseOrder;
 use Src\Common\Audit;
 use Src\Common\Logger;
-use Src\Common\Sanitizer; // Necessário para a sanitização
-use Src\Models\Product;    // Essencial para o fluxo de estoque
 
 class PurchaseOrderController
 {
@@ -49,70 +47,66 @@ class PurchaseOrderController
     {
         try {
             $input = json_decode(file_get_contents("php://input"), true);
-            if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
-            // 1. Aplicando Sanitização
-            $input = Sanitizer::cleanArray($input);
-
-            // Validação de campos obrigatórios
-            if (empty($input['supplierId']) || empty($input['items'])) {
-                Response::error("Missing supplier ID or items.", 400); return;
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
             }
 
-            $result = $this->purchaseOrderModel->create($input);
-            Audit::created('PurchaseOrder', (int)$result);
-            Response::json(['id' => $result], 201, "Purchase Order created successfully.");
+            if (!isset($input['supplierId']) || (int)$input['supplierId'] <= 0) {
+                Response::error("Missing/invalid field: supplierId", 400);
+                return;
+            }
+
+            if (!isset($input['items']) || !is_array($input['items']) || count($input['items']) === 0) {
+                Response::error("Missing field: items (must be a non-empty array)", 400);
+                return;
+            }
+
+            foreach ($input['items'] as $idx => $item) {
+                if (!isset($item['productId']) || (int)$item['productId'] <= 0) {
+                    Response::error("Missing/invalid field: items[$idx].productId", 400);
+                    return;
+                }
+                if (!isset($item['quantity']) || (int)$item['quantity'] <= 0) {
+                    Response::error("Missing/invalid field: items[$idx].quantity (must be > 0)", 400);
+                    return;
+                }
+
+                if (isset($item['priceAtPurchase']) && (float)$item['priceAtPurchase'] < 0) {
+                    Response::error("Invalid field: items[$idx].priceAtPurchase (must be >= 0)", 400);
+                    return;
+                }
+            }
+
+            $newId = $this->purchaseOrderModel->create($input);
+
+            Audit::created('PurchaseOrder', (int)$newId);
+
+            Response::json(['orderId' => $newId], 201, "Purchase order created successfully.");
         } catch (\Exception $e) {
             Logger::error("PurchaseOrderController@create: " . $e->getMessage());
-            Response::error("Error creating order: " . $e->getMessage(), 500);
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }
-
 
     public function update($id)
     {
         try {
             $input = json_decode(file_get_contents("php://input"), true);
-            if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
-            // 1. Sanitização
-            $input = Sanitizer::cleanArray($input);
+            if (!$input) {
+                Response::error("Invalid JSON body.", 400);
+                return;
+            }
 
-            // 2. Buscar o status atual ANTES de atualizar
-            $currentOrder = $this->purchaseOrderModel->getById((int)$id);
-            if (!$currentOrder) { Response::error("Order not found.", 404); return; }
-
-            $oldStatus = strtoupper($currentOrder['status'] ?? '');
-            $newStatus = isset($input['status']) ? strtoupper($input['status']) : $oldStatus;
-
-            // 3. Atualizar o Pedido no Model
             $updated = $this->purchaseOrderModel->update((int)$id, $input);
 
             if ($updated) {
-                // 4. WORKFLOW: Se mudou para RECEIVED E o status anterior não era RECEIVED
-                if ($newStatus === 'RECEIVED' && $oldStatus !== 'RECEIVED') {
-                    
-                    // Rebusca o pedido ATUALIZADO (opcional, mas mais seguro para garantir itens)
-                    $updatedOrder = $this->purchaseOrderModel->getById((int)$id); 
-                    
-                    if (!empty($updatedOrder['items'])) {
-                        
-                        $productModel = new Product(); 
-                        
-                        foreach ($updatedOrder['items'] as $item) {
-                            // Chama o método no Product Model
-                            $productModel->addStock($item['productId'], $item['quantity']); 
-                        }
-                        Logger::info("Stock updated for Order ID: $id (Received)");
-                    } else {
-                        Logger::info("Order ID: $id received, but no items found.");
-                    }
-                }
-
                 Audit::updated('PurchaseOrder', (int)$id);
                 Response::json(null, 200, "Purchase order updated successfully.");
             } else {
-                Response::error("Order not found or no changes made.", 404);
+                Response::error("Purchase order not found.", 404);
             }
         } catch (\Exception $e) {
             Logger::error("PurchaseOrderController@update: " . $e->getMessage());
@@ -137,4 +131,3 @@ class PurchaseOrderController
         }
     }
 }
-
