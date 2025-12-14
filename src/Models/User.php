@@ -79,9 +79,9 @@ class User
 
         if (password_verify($password, $user['PasswordHash'])) {
             unset($user['PasswordHash']); // Remove password hash before returning user data
-            return true;
+            return $user;
         } else {
-            return false; // Password does not match
+            return null; // Password does not match
         }
 
     }

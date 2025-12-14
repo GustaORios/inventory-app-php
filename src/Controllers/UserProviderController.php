@@ -10,6 +10,7 @@ class UserProviderController
 {
     
     private $userModel;
+    const ALLOWED_ROLES = ['Manager', 'Picker', 'Supplier'];
 
     public function __construct()
     {
@@ -19,9 +20,15 @@ class UserProviderController
     public function register()
     {
         try {
+
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
+                return;
+            }
+
+            if (!in_array($input['role'], self::ALLOWED_ROLES)) {
+                Response::error("Invalid role. Allowed: " . implode(', ', self::ALLOWED_ROLES), 400);
                 return;
             }
 
@@ -61,12 +68,19 @@ class UserProviderController
                 }
             }
 
-            if ($this->userModel->authenticate($input['email'], $input['password'])) {
+            $user = $this->userModel->authenticate($input['email'], $input['password']);
+            if ($user !== null) {
                 // session_start()
-                $_SESSION['userinfo'] = ['email' => $input['email']];
+                //$_SESSION['userinfo'] = $user;
+                $_SESSION['userinfo'] = [
+                    'id'    => $user['userId'],
+                    'email' => $user['Email'],
+                    'role'  => $user['Role'],
+                    'username' => $user['Username']
+                ];
             }
 
-            Response::json(['message' => 'Login successful'], 200, "Welcome " . $_SESSION['userinfo']['email']);
+            Response::json(['message' => 'Login successful'], 200, "Welcome " . $_SESSION['userinfo']['username']);
         } catch (\Exception $e) {
             Logger::error("UserProviderController@login: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
@@ -76,8 +90,8 @@ class UserProviderController
     public function logout()
     {
         try {
-            if (isset($_SESSION['userinfo']['email'])) {
-                $email = $_SESSION['userinfo']['email'];
+            if (isset($_SESSION['userinfo']['username'])) {
+                $email = $_SESSION['userinfo']['username'];
                 session_destroy();
                 Response::json(['message' => 'Logout successful.'], 200, 'Bye '. $email);
             } else {
