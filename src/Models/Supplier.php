@@ -15,13 +15,8 @@ class Supplier
 
     public function __construct()
     {
-        require_once __DIR__ . '/../Common/config.php';
-
-        if (!isset($conn) || !($conn instanceof \mysqli)) {
-            throw new \Exception("Database connection not available. Check config.php");
-        }
-
-        $this->conn = $conn;
+        // Captura o objeto de conexão retornado pelo config.php
+        $this->conn = require __DIR__ . '/../Common/config.php';
     }
 
     public function getAll()
@@ -46,8 +41,7 @@ class Supplier
     public function getById($id)
     {
         $sql = "SELECT SupplierId AS id, Name AS name, Email AS email, Role AS role, Status AS status, CreateAt AS createdAt, UpdateAt AS updatedAt
-                FROM Suppliers
-                WHERE SupplierId = ?";
+                FROM Suppliers WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
 
@@ -56,24 +50,20 @@ class Supplier
         }
 
         $stmt->bind_param("i", $id);
-
-        if (!$stmt->execute()) {
-            throw new \Exception("DB execute failed: " . $stmt->error);
-        }
+        $stmt->execute();
 
         $result = $stmt->get_result();
         $supplier = $result->fetch_assoc();
 
         $stmt->close();
 
-        return $supplier ?: null;
+        return $supplier;
     }
 
+    // CREATE
     public function create(array $data)
     {
-        $sql = "INSERT INTO Suppliers (Name, Email, Role, Status, CreateAt, UpdateAt)
-            VALUES (?, ?, ?, ?, NOW(), NOW())";
-
+        $sql = "INSERT INTO Suppliers (Name, Email, Role, Status, CreateAt, UpdateAt) VALUES (?, ?, ?, ?, NOW(), NOW())";
         $stmt = $this->conn->prepare($sql);
 
         if (!$stmt) {
@@ -132,19 +122,23 @@ class Supplier
         return $stmt->affected_rows > 0;
     }
 
-
     // DELETE
     public function delete($id)
     {
         $sql = "DELETE FROM Suppliers WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
+
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
+        }
+
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
-        return $stmt->affected_rows > 0;
+        $affected = $stmt->affected_rows > 0;
+        $stmt->close();
+
+        return $affected;
     }
-
-
-
 }
