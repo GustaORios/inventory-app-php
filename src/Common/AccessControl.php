@@ -7,6 +7,7 @@ class AccessControl
     const ROLE_MANAGER = 'manager';
     const ROLE_PICKER = 'picker';
     const ROLE_SUPPLIER = 'supplier';
+    const ROLE_ADMIN = 'admin';
 
     public static function enforceRoles(array $allowedRoles)
     {
@@ -24,7 +25,7 @@ class AccessControl
 
         if (!in_array($userRole, $allowedRoles)) {
             Response::error("Forbidden: You do not have permission to perform this action.", 403);
-            Logger::info("AccessControl@enforceRoles: Forbidden access attempt by role '{$userRole}'.");
+            Logger::error("AccessControl@enforceRoles: Forbidden access attempt by role '{$userRole}'.");
             exit;
         }
         

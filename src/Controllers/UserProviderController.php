@@ -78,10 +78,13 @@ class UserProviderController
                     'role'  => $user['Role'],
                     'username' => $user['Username']
                 ];
+                Response::json(['message' => 'Login successful'], 200, "Welcome " . $_SESSION['userinfo']['email']);
+                Logger::info("UserProviderController@login: User '{$_SESSION['userinfo']['email']}' logged in successfully");
+            } else {
+                Response::error("Invalid email or password.", 401);
+                Logger::error("UserProviderController@login: Failed login attempt for email '{$input['email']}'");
+                return;
             }
-
-            Response::json(['message' => 'Login successful'], 200, "Welcome " . $_SESSION['userinfo']['username']);
-            Logger::info("UserProviderController@login: User '{$_SESSION['userinfo']['email']}' logged in successfully");
         } catch (\Exception $e) {
             Logger::error("UserProviderController@login: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
