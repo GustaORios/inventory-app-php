@@ -14,9 +14,19 @@ class PurchaseOrder
         }
     }
 
-    public function getAll($supplierId)
+    private function getSupplierIdIfSupplier(): ?int
     {
-        $sql = "SELECT 
+        if (isset($_SESSION['userinfo']['role']) && $_SESSION['userinfo']['role'] === 'supplier') {
+            return (int)($_SESSION['userinfo']['id'] ?? null);
+        }
+        return null;
+    }
+
+    public function getAll()
+    {
+        $supplierId = $this->getSupplierIdIfSupplier(); // validate if supplier role to filter order when select
+
+        $sql = "SELECT
                     OrderId AS id,
                     SupplierId AS supplierId,
                     TotalAmount AS totalAmount,
@@ -24,17 +34,28 @@ class PurchaseOrder
                     OrderDate AS orderDate,
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
-                FROM purchaseorder
-                WHERE SupplierId = ? 
-                ORDER BY OrderId DESC";
+                FROM purchaseorder";
+
+        $params = "";
+        $bind_values = [];
+
+        if ($supplierId !== null) {
+            $sql .= " WHERE SupplierId = ?";
+            $params = "i";
+            $bind_values[] = $supplierId;
+        }
+
+        $sql .= " ORDER BY OrderId DESC";
 
         $stmt = $this->conn->prepare($sql);
-        
+
         if (!$stmt) {
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
 
-        $stmt->bind_param("i", $supplierId);
+        if ($params) {
+             $stmt->bind_param($params, ...$bind_values);
+        }
 
         if (!$stmt->execute()) {
             throw new \Exception("DB execute failed: " . $stmt->error);
@@ -54,7 +75,9 @@ class PurchaseOrder
 
     public function getById($id)
     {
-        $sql = "SELECT 
+        $supplierId = $this->getSupplierIdIfSupplier();
+
+        $sql = "SELECT
                     OrderId AS id,
                     SupplierId AS supplierId,
                     TotalAmount AS totalAmount,
@@ -63,13 +86,22 @@ class PurchaseOrder
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM purchaseorder
-                WHERE OrderId = ?
-                  AND SupplierId = ?";
+                WHERE OrderId = ?";
+
+        $params = "i";
+        $bind_values = [$id];
+
+        if ($supplierId !== null) {
+            $sql .= " AND SupplierId = ?";
+            $params .= "i";
+            $bind_values[] = $supplierId;
+        }
 
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
 
-        $stmt->bind_param("ii", $id, $_SESSION['userinfo']['id']);
+        $stmt->bind_param($params, ...$bind_values);
+
         if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
 
         $result = $stmt->get_result();
@@ -78,7 +110,7 @@ class PurchaseOrder
 
         if (!$order) return null;
 
-        $sql2 = "SELECT 
+        $sql2 = "SELECT
                     poi.OrderId AS orderId,
                     poi.ProductId AS productId,
                     poi.Quantity AS quantity,

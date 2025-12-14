@@ -27,8 +27,7 @@ class PurchaseOrderController
                 AccessControl::ROLE_ADMIN
             ]); // validate if role is allowed to access this resource
 
-            $userId = $_SESSION['userinfo']['id'];
-            $orders = $this->purchaseOrderModel->getAll($userId); // select orders using supplier id logged in
+            $orders = $this->purchaseOrderModel->getAll();
             Response::json(['purchaseOrders' => $orders], 200, "List of purchase orders fetched successfully.");
         } catch (\Exception $e) {
             Logger::error("PurchaseOrderController@getAll: " . $e->getMessage());
@@ -45,7 +44,7 @@ class PurchaseOrderController
                 AccessControl::ROLE_SUPPLIER,
                 AccessControl::ROLE_ADMIN
             ]); // validate if role is allowed to access this resource
-            $order = $this->purchaseOrderModel->getById((int)$id);
+            $order = $this->purchaseOrderModel->getById($id, isset($_SESSION['userinfo']['id']) ? (int)$_SESSION['userinfo']['id'] : null);
 
             if ($order) {
                 Response::json($order, 200, "Purchase order fetched successfully.");
