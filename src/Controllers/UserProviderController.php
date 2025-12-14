@@ -1,8 +1,9 @@
 <?php
 
 namespace Src\Controllers;
+
+use Src\Common\AccessControl;
 use Src\Models\User;
-use Src\Common\Audit;
 use Src\Common\Logger;
 use Src\Common\Response;
 
@@ -10,7 +11,7 @@ class UserProviderController
 {
     
     private $userModel;
-    const ALLOWED_ROLES = ['Manager', 'Picker', 'Supplier'];
+    const ALLOWED_ROLES = ['manager', 'picker', 'supplier', 'admin'];
 
     public function __construct()
     {
@@ -20,6 +21,10 @@ class UserProviderController
     public function register()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
 
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
