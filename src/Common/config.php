@@ -1,8 +1,8 @@
 <?php
 
 $host = "localhost";
-$user = "root"; 
-$password = "ApnneJDj9427*4"; 
+$user = "PHP_AGENT"; 
+$password = "KYjf_1orRRw.mz[J"; 
 $dbname = "inventory-procurement-spa";
 $conn = new mysqli($host, $user, $password, $dbname);
 

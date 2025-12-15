@@ -147,7 +147,6 @@ class PurchaseOrder
 
         $order['items'] = $items;
 
-        $stmt->close();
         $itemsStmt->close();
 
         return $order;
