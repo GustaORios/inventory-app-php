@@ -10,6 +10,19 @@
 [2025-12-13 04:40:48][INFO] PurchaseOrder updated. ID: 1
 [2025-12-13 04:41:20][ERROR] ProductController@create: Column 'Category' cannot be null
 [2025-12-13 04:42:13][INFO] Product created. ID: 32
+[2025-12-13 19:46:52][ERROR] PurchaseOrderController@update: Invalid status. Allowed: PENDING, APPROVED, CANCELLED, RECEIVED
+[2025-12-13 19:47:04][INFO] PurchaseOrder updated. ID: 12
+[2025-12-13 19:48:12][INFO] PurchaseOrder updated. ID: 12
+[2025-12-13 19:48:44][INFO] PurchaseOrder updated. ID: 12
+[2025-12-13 21:59:40][INFO] Supplier created. ID: 11
+[2025-12-14 02:13:13][ERROR] SupplierController@create: Duplicate entry 'gustavo@updated.com' for key 'users.uk_users_email'
+[2025-12-14 02:28:40][ERROR] SupplierController@create: Unknown column 'id' in 'field list'
+[2025-12-14 02:28:53][ERROR] SupplierController@create: Email already registered.
+[2025-12-14 02:47:31][ERROR] SupplierController@create: Email already registered.
+[2025-12-14 20:50:19][INFO] Supplier deleted. ID: 11
+[2025-12-14 20:57:55][INFO] Product deleted. ID: 32
+[2025-12-14 21:14:30][INFO] Product deleted. ID: 31
+[2025-12-14 21:34:13][ERROR] PurchaseOrderController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'WHERE SupplierId = ?' at line 11
 [2025-12-14 03:36:34][ERROR] SupplierController@create: Data truncated for column 'Status' at row 1
 [2025-12-14 03:38:50][INFO] Supplier created. ID: 11
 [2025-12-14 03:41:45][ERROR] ProductController@create: Unknown column 'InStock' in 'field list'

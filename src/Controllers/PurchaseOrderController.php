@@ -1,6 +1,7 @@
 <?php
 namespace Src\Controllers;
 
+use Src\Common\AccessControl;
 use Src\Common\Response;
 use Src\Models\PurchaseOrder;
 use Src\Common\Audit;
@@ -20,6 +21,13 @@ class PurchaseOrderController
     public function getAll()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_SUPPLIER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $orders = $this->purchaseOrderModel->getAll();
             Response::json(['purchaseOrders' => $orders], 200, "List of purchase orders fetched successfully.");
         } catch (\Exception $e) {
@@ -31,7 +39,13 @@ class PurchaseOrderController
     public function getById($id)
     {
         try {
-            $order = $this->purchaseOrderModel->getById((int)$id);
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_SUPPLIER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+            $order = $this->purchaseOrderModel->getById($id, isset($_SESSION['userinfo']['id']) ? (int)$_SESSION['userinfo']['id'] : null);
 
             if ($order) {
                 Response::json($order, 200, "Purchase order fetched successfully.");
@@ -47,6 +61,11 @@ class PurchaseOrderController
     public function create()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
@@ -71,6 +90,10 @@ class PurchaseOrderController
     public function update($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) { Response::error("Invalid JSON body.", 400); return; }
 
@@ -121,6 +144,11 @@ class PurchaseOrderController
     public function delete($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $deleted = $this->purchaseOrderModel->delete((int)$id);
 
             if ($deleted) {

@@ -59,6 +59,10 @@ $router->add('PUT', '/products/:id', 'ProductController@update');
 $router->add('PATCH', '/products/:id', 'ProductController@update');
 $router->add('DELETE', '/products/:id', 'ProductController@delete');
 
+// user router
+$router->add('POST', '/auth/login', 'UserProviderController@login');
+$router->add('POST', '/auth/logout', 'UserProviderController@logout');
+$router->add('POST', '/auth/register', 'UserProviderController@register');
 // Dashboard Router
 $router->add('GET', '/dashboard/summary', 'DashboardController@getSummary');
 $router->add('GET', '/dashboard', 'DashboardController@getSummary');

@@ -1,6 +1,7 @@
 <?php
 namespace Src\Controllers;
 
+use Src\Common\AccessControl;
 use Src\Common\Response;
 use Src\Models\Product;
 use Src\Common\Audit;
@@ -18,6 +19,12 @@ class ProductController
     public function getAll()
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $products = $this->productModel->getAll();
             Response::json(['products' => $products], 200, "List of products fetched successfully.");
         } catch (\Exception $e) {
@@ -29,6 +36,14 @@ class ProductController
     public function getById($id)
     {
         try {
+
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
+
             $product = $this->productModel->getById($id);
 
             if ($product) {
@@ -45,6 +60,13 @@ class ProductController
     public function create()
     {
         try {
+
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
+
             $input = json_decode(file_get_contents("php://input"), true);
 
             if (!$input) {
@@ -74,6 +96,11 @@ class ProductController
     public function delete($id)
     {
         try {
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
             $deleted = $this->productModel->delete($id);
 
             if ($deleted) {
@@ -91,6 +118,13 @@ class ProductController
     public function update($id)
     {
         try {
+
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
+
             $input = json_decode(file_get_contents("php://input"), true);
 
             if (!$input) {

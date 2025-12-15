@@ -9,11 +9,75 @@ class PurchaseOrder
     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
+        if (!isset($conn) || !($conn instanceof \mysqli)) {
+            throw new \Exception("Database connection not available. Check config.php");
+        }
+    }
+
+    private function getSupplierIdIfSupplier(): ?int
+    {
+        if (isset($_SESSION['userinfo']['role']) && $_SESSION['userinfo']['role'] === 'supplier') {
+            return (int)($_SESSION['userinfo']['id'] ?? null);
+        }
+        return null;
     }
 
     public function getAll()
     {
-        $sql = "SELECT 
+        $supplierId = $this->getSupplierIdIfSupplier(); // validate if supplier role to filter order when select
+
+        $sql = "SELECT
+                    OrderId AS id,
+                    SupplierId AS supplierId,
+                    TotalAmount AS totalAmount,
+                    Status AS status,
+                    OrderDate AS orderDate,
+                    CreateAt AS createdAt,
+                    UpdateAt AS updatedAt
+                FROM purchaseorder";
+
+        $params = "";
+        $bind_values = [];
+
+        if ($supplierId !== null) {
+            $sql .= " WHERE SupplierId = ?";
+            $params = "i";
+            $bind_values[] = $supplierId;
+        }
+
+        $sql .= " ORDER BY OrderId DESC";
+
+        $stmt = $this->conn->prepare($sql);
+
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
+        }
+
+        if ($params) {
+             $stmt->bind_param($params, ...$bind_values);
+        }
+
+        if (!$stmt->execute()) {
+            throw new \Exception("DB execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+
+        $stmt->close();
+
+        return $orders;
+    }
+
+    public function getById($id)
+    {
+        $supplierId = $this->getSupplierIdIfSupplier();
+
+        $sql = "SELECT
                     OrderId AS id,
                     SupplierId AS supplierId,
                     TotalAmount AS totalAmount,
@@ -22,44 +86,43 @@ class PurchaseOrder
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM purchaseorder
-                ORDER BY OrderId DESC";
+                WHERE OrderId = ?";
 
-        $result = $this->conn->query($sql);
+        $params = "i";
+        $bind_values = [$id];
 
-        if (!$result) {
-            throw new \Exception("DB query failed: " . $this->conn->error);
+        if ($supplierId !== null) {
+            $sql .= " AND SupplierId = ?";
+            $params .= "i";
+            $bind_values[] = $supplierId;
         }
 
-        $orders = [];
-        while ($row = $result->fetch_assoc()) {
-            $orders[] = $row;
-        }
-
-        return $orders;
-    }
-
-    public function getById($id)
-    {
-        $sql = "SELECT 
-                    OrderId AS id,
-                    SupplierId AS supplierId,
-                    TotalAmount AS totalAmount,
-                    Status AS status,
-                    OrderDate AS orderDate,
-                    CreateAt AS createdAt,
-                    UpdateAt AS updatedAt
-                FROM purchaseorder WHERE OrderId = ?";
-        
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) {
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
 
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
+        $stmt->bind_param($params, ...$bind_values);
+
+        if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
 
         $result = $stmt->get_result();
         $order = $result->fetch_assoc();
+        $stmt->close();
+
+        if (!$order) return null;
+
+        $sql2 = "SELECT
+                    poi.OrderId AS orderId,
+                    poi.ProductId AS productId,
+                    poi.Quantity AS quantity,
+                    poi.PriceAtPurchase AS priceAtPurchase,
+                    (poi.Quantity * poi.PriceAtPurchase) AS lineTotal
+                FROM purchaseorderitems poi
+                WHERE poi.OrderId = ?";
+
+        $stmt2 = $this->conn->prepare($sql2);
+        if (!$stmt2) throw new \Exception("DB prepare failed: " . $this->conn->error);
 
         if (!$order) {
             $stmt->close();

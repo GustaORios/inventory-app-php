@@ -4,10 +4,11 @@ namespace Src\Models;
 class Supplier
 {
     public $id;
+    public $userId;
     public $name;
     public $email;
-    public $role;
-    public $status;
+    public $address;
+    public $phone;
     public $createdAt;
     public $updatedAt;
 
@@ -16,12 +17,17 @@ class Supplier
     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
+
+        if (!isset($conn) || !($conn instanceof \mysqli)) {
+            throw new \Exception("Database connection not available. Check config.php");
+        }
     }
 
     public function getAll()
     {
-        $sql = "SELECT SupplierId AS id, Name AS name, Email AS email, Role AS role, Status AS status, CreateAt AS createdAt, UpdateAt AS updatedAt
-                FROM Suppliers";
+        $sql = "SELECT SupplierId AS id, UserId AS userId, Name AS name, Email AS email, 
+                       Address AS address, Phone AS phone, CreateAt AS createdAt, UpdateAt AS updatedAt
+                FROM suppliers";
 
         $result = $this->conn->query($sql);
 
@@ -39,8 +45,10 @@ class Supplier
 
     public function getById($id)
     {
-        $sql = "SELECT SupplierId AS id, Name AS name, Email AS email, Role AS role, Status AS status, CreateAt AS createdAt, UpdateAt AS updatedAt
-                FROM Suppliers WHERE SupplierId = ?";
+        $sql = "SELECT SupplierId AS id, UserId AS userId, Name AS name, Email AS email, 
+                       Address AS address, Phone AS phone, CreateAt AS createdAt, UpdateAt AS updatedAt
+                FROM suppliers
+                WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
 
@@ -62,19 +70,22 @@ class Supplier
     // CREATE
     public function create(array $data)
     {
-        $sql = "INSERT INTO Suppliers (Name, Email, Role, Status, CreateAt, UpdateAt) VALUES (?, ?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO suppliers (UserId, Name, Email, Address, Phone, CreateAt, UpdateAt)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+
         $stmt = $this->conn->prepare($sql);
 
         if (!$stmt) {
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
 
-        $name = $data['name'];
-        $email = $data['email'];
-        $role = $data['role'];
-        $status = $data['status'];
+        $userId  = $data['userId'];
+        $name    = $data['name'];
+        $email   = $data['email'];
+        $address = $data['address'];
+        $phone   = $data['phone'];
 
-        $stmt->bind_param("ssss", $name, $email, $role, $status);
+        $stmt->bind_param("issss", $userId, $name, $email, $address, $phone);
 
         if (!$stmt->execute()) {
             throw new \Exception("DB execute failed: " . $stmt->error);
@@ -87,20 +98,19 @@ class Supplier
         return $newId;
     }
 
-    // UPDATE
     public function update($id, array $data)
     {
         $fields = [];
         $values = [];
-        $types = "";
+        $types  = "";
 
-        $allowed = ['name', 'email', 'role', 'status'];
+        $allowed = ['userId', 'name', 'email', 'address', 'phone'];
 
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
                 $fields[] = ucfirst($field) . " = ?";
                 $values[] = $data[$field];
-                $types .= "s";
+                $types   .= ($field === 'userId') ? "i" : "s";
             }
         }
 
@@ -108,8 +118,8 @@ class Supplier
             return false;
         }
 
-        $sql = "UPDATE Suppliers SET " . implode(", ", $fields) . ", UpdateAt = NOW()
-            WHERE SupplierId = ?";
+        $sql = "UPDATE suppliers SET " . implode(", ", $fields) . ", UpdateAt = NOW()
+                WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
         $types .= "i";
@@ -121,23 +131,12 @@ class Supplier
         return $stmt->affected_rows > 0;
     }
 
-    // DELETE
     public function delete($id)
     {
-        $sql = "DELETE FROM Suppliers WHERE SupplierId = ?";
+        $sql = "DELETE FROM suppliers WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
 
-        if (!$stmt) {
-            throw new \Exception("DB prepare failed: " . $this->conn->error);
-        }
-
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $affected = $stmt->affected_rows > 0;
-        $stmt->close();
-
-        return $affected;
+        return $stmt->affected_rows > 0;
     }
 }

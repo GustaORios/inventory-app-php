@@ -19,6 +19,9 @@ class Product
     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
+        if (!isset($conn) || !($conn instanceof \mysqli)) {
+            throw new \Exception("Database connection not available. Check config.php");
+        }
     }
 
     // GET ALL
