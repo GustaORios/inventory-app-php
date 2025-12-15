@@ -8,13 +8,7 @@ class PurchaseOrder
 
     public function __construct()
     {
-        require_once __DIR__ . '/../Common/config.php';
-
-        if (!isset($conn) || !($conn instanceof \mysqli)) {
-            throw new \Exception("Database connection not available. Check config.php");
-        }
-
-        $this->conn = $conn;
+        $this->conn = require __DIR__ . '/../Common/config.php';
     }
 
     public function getAll()
@@ -54,100 +48,84 @@ class PurchaseOrder
                     OrderDate AS orderDate,
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
-                FROM purchaseorder
-                WHERE OrderId = ?";
-
+                FROM purchaseorder WHERE OrderId = ?";
+        
         $stmt = $this->conn->prepare($sql);
-        if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
+        }
 
         $stmt->bind_param("i", $id);
-        if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
+        $stmt->execute();
 
         $result = $stmt->get_result();
         $order = $result->fetch_assoc();
-        $stmt->close();
 
-        if (!$order) return null;
-
-        $sql2 = "SELECT 
-                    poi.OrderId AS orderId,
-                    poi.ProductId AS productId,
-                    poi.Quantity AS quantity,
-                    poi.PriceAtPurchase AS priceAtPurchase,
-                    (poi.Quantity * poi.PriceAtPurchase) AS lineTotal
-                FROM purchaseorderitems poi
-                WHERE poi.OrderId = ?";
-
-        $stmt2 = $this->conn->prepare($sql2);
-        if (!$stmt2) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-        $stmt2->bind_param("i", $id);
-        if (!$stmt2->execute()) throw new \Exception("DB execute failed: " . $stmt2->error);
-
-        $items = [];
-        $res2 = $stmt2->get_result();
-        while ($row = $res2->fetch_assoc()) {
-            $items[] = $row;
+        if (!$order) {
+            $stmt->close();
+            return null;
         }
-        $stmt2->close();
+        $itemsSql = "SELECT ProductId AS productId, Quantity AS quantity, PriceAtPurchase AS unitPrice 
+                     FROM purchaseorderitems WHERE OrderId = ?";
+        
+        $itemsStmt = $this->conn->prepare($itemsSql);
+        if (!$itemsStmt) {
+            throw new \Exception("DB prepare failed for items: " . $this->conn->error);
+        }
+
+        $itemsStmt->bind_param("i", $id);
+        $itemsStmt->execute();
+        $itemsResult = $itemsStmt->get_result();
+        
+        $items = [];
+        while ($item = $itemsResult->fetch_assoc()) {
+            $items[] = $item;
+        }
 
         $order['items'] = $items;
+
+        $stmt->close();
+        $itemsStmt->close();
 
         return $order;
     }
 
     public function create(array $data)
     {
-        $supplierId = (int)$data['supplierId'];
-        $items = $data['items'];
-
         $this->conn->begin_transaction();
-
+        
         try {
-            $sql = "INSERT INTO purchaseorder (SupplierId, TotalAmount)
-                    VALUES (?, 0)";
-
-            $stmt = $this->conn->prepare($sql);
-            if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-            $stmt->bind_param("i", $supplierId);
-            if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
-
+            $orderSql = "INSERT INTO purchaseorder (SupplierId, TotalAmount, Status, OrderDate, CreateAt, UpdateAt) 
+                         VALUES (?, ?, 'Pending', CURDATE(), NOW(), NOW())";
+            $orderStmt = $this->conn->prepare($orderSql);
+            if (!$orderStmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
+            $supplierId = $data['supplierId'];
+            $zeroTotal = 0.00; 
+            $orderStmt->bind_param("id", $supplierId, $zeroTotal);
+            if (!$orderStmt->execute()) throw new \Exception("DB execute failed: " . $orderStmt->error);
             $orderId = $this->conn->insert_id;
-            $stmt->close();
+            $orderStmt->close();
 
-            $total = 0.0;
+            $total = 0.00;
+            $itemSql = "INSERT INTO purchaseorderitems (OrderId, ProductId, Quantity, PriceAtPurchase) VALUES (?, ?, ?, ?)";
+            $itemStmt = $this->conn->prepare($itemSql);
+            if (!$itemStmt) throw new \Exception("DB prepare failed for items: " . $this->conn->error);
 
-            foreach ($items as $item) {
-                $productId = (int)$item['productId'];
-                $quantity  = (int)$item['quantity'];
+            foreach ($data['items'] as $item) {
+                $price = $this->getProductPrice((int)$item['productId']); // Função auxiliar para buscar o preço
+                $lineTotal = $price * $item['quantity'];
+                $total += $lineTotal;
 
-                $price = isset($item['priceAtPurchase'])
-                    ? (float)$item['priceAtPurchase']
-                    : $this->getProductPrice($productId);
-
-                $sqlItem = "INSERT INTO purchaseorderitems (OrderId, ProductId, Quantity, PriceAtPurchase)
-                            VALUES (?, ?, ?, ?)";
-
-                $stmtItem = $this->conn->prepare($sqlItem);
-                if (!$stmtItem) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                $stmtItem->bind_param("iiid", $orderId, $productId, $quantity, $price);
-                if (!$stmtItem->execute()) throw new \Exception("DB execute failed: " . $stmtItem->error);
-
-                $stmtItem->close();
-
-                $total += ($quantity * $price);
+                $itemStmt->bind_param("iiid", $orderId, $item['productId'], $item['quantity'], $price);
+                if (!$itemStmt->execute()) throw new \Exception("DB execute failed for item: " . $itemStmt->error);
             }
+            $itemStmt->close();
+            $up = $this->conn->prepare("UPDATE purchaseorder SET TotalAmount = ? WHERE OrderId = ?");
+            if (!$up) throw new \Exception("DB prepare failed: " . $this->conn->error);
 
-            $sqlTotal = "UPDATE purchaseorder SET TotalAmount = ? WHERE OrderId = ?";
-            $stmtTotal = $this->conn->prepare($sqlTotal);
-            if (!$stmtTotal) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-            $stmtTotal->bind_param("di", $total, $orderId);
-            if (!$stmtTotal->execute()) throw new \Exception("DB execute failed: " . $stmtTotal->error);
-
-            $stmtTotal->close();
+            $up->bind_param("di", $total, $orderId);
+            if (!$up->execute()) throw new \Exception("DB execute failed: " . $up->error);
+            $up->close();
 
             $this->conn->commit();
             return $orderId;
@@ -160,87 +138,40 @@ class PurchaseOrder
 
     public function update($orderId, array $data)
     {
-        $exists = $this->getById((int)$orderId);
-        if (!$exists) return false;
+        $fields = [];
+        $values = [];
+        $types = "";
 
-        $this->conn->begin_transaction();
+        $allowed = ['supplierId', 'status', 'totalAmount'];
 
-        try {
-            if (isset($data['supplierId'])) {
-                $supplierId = (int)$data['supplierId'];
-
-                $sql = "UPDATE purchaseorder SET SupplierId = ? WHERE OrderId = ?";
-                $stmt = $this->conn->prepare($sql);
-                if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                $stmt->bind_param("ii", $supplierId, $orderId);
-                if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
-                $stmt->close();
+        foreach ($allowed as $field) {
+            if (isset($data[$field])) {
+                $fields[] = ucfirst($field) . " = ?";
+                $values[] = $data[$field];
+                $types .= ($field === 'totalAmount' ? 'd' : (($field === 'supplierId') ? 'i' : 's'));
             }
-
-            if (isset($data['status'])) {
-                $status = strtoupper(trim((string)$data['status']));
-
-                $allowedStatuses = ['PENDING', 'APPROVED', 'CANCELLED', 'RECEIVED'];
-                if (!in_array($status, $allowedStatuses, true)) {
-                    throw new \Exception("Invalid status. Allowed: " . implode(", ", $allowedStatuses));
-                }
-
-                $sql = "UPDATE purchaseorder SET Status = ? WHERE OrderId = ?";
-                $stmt = $this->conn->prepare($sql);
-                if (!$stmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                $stmt->bind_param("si", $status, $orderId);
-                if (!$stmt->execute()) throw new \Exception("DB execute failed: " . $stmt->error);
-                $stmt->close();
-            }
-
-            if (isset($data['items']) && is_array($data['items'])) {
-                $del = $this->conn->prepare("DELETE FROM purchaseorderitems WHERE OrderId = ?");
-                if (!$del) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                $del->bind_param("i", $orderId);
-                if (!$del->execute()) throw new \Exception("DB execute failed: " . $del->error);
-                $del->close();
-
-                $total = 0.0;
-
-                foreach ($data['items'] as $item) {
-                    $productId = (int)$item['productId'];
-                    $quantity  = (int)$item['quantity'];
-
-                    $price = isset($item['priceAtPurchase'])
-                        ? (float)$item['priceAtPurchase']
-                        : $this->getProductPrice($productId);
-
-                    $ins = $this->conn->prepare(
-                        "INSERT INTO purchaseorderitems (OrderId, ProductId, Quantity, PriceAtPurchase)
-                         VALUES (?, ?, ?, ?)"
-                    );
-                    if (!$ins) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                    $ins->bind_param("iiid", $orderId, $productId, $quantity, $price);
-                    if (!$ins->execute()) throw new \Exception("DB execute failed: " . $ins->error);
-                    $ins->close();
-
-                    $total += ($quantity * $price);
-                }
-
-                $up = $this->conn->prepare("UPDATE purchaseorder SET TotalAmount = ? WHERE OrderId = ?");
-                if (!$up) throw new \Exception("DB prepare failed: " . $this->conn->error);
-
-                $up->bind_param("di", $total, $orderId);
-                if (!$up->execute()) throw new \Exception("DB execute failed: " . $up->error);
-                $up->close();
-            }
-
-            $this->conn->commit();
-            return true;
-
-        } catch (\Exception $e) {
-            $this->conn->rollback();
-            throw $e;
         }
+
+        if (empty($fields)) {
+            return false;
+        }
+
+        $sql = "UPDATE purchaseorder SET " . implode(", ", $fields) . ", UpdateAt = NOW()
+            WHERE OrderId = ?";
+
+        $stmt = $this->conn->prepare($sql);
+        
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
+        }
+
+        $types .= "i";
+        $values[] = (int)$orderId;
+
+        $stmt->bind_param($types, ...$values);
+        $stmt->execute();
+
+        return $stmt->affected_rows > 0;
     }
 
     public function delete($orderId)
@@ -256,7 +187,7 @@ class PurchaseOrder
 
         return $deleted;
     }
-
+    
     private function getProductPrice(int $productId): float
     {
         $stmt = $this->conn->prepare("SELECT Price FROM products WHERE ProductId = ?");
@@ -269,9 +200,7 @@ class PurchaseOrder
         $row = $res->fetch_assoc();
         $stmt->close();
 
-        if (!$row) {
-            throw new \Exception("Product not found: " . $productId);
-        }
+        if (!$row) throw new \Exception("Product ID not found: " . $productId);
 
         return (float)$row['Price'];
     }

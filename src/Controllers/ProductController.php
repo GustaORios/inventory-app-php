@@ -1,5 +1,4 @@
 <?php
-
 namespace Src\Controllers;
 
 use Src\Common\Response;
