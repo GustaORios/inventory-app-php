@@ -8,6 +8,7 @@ use Src\Models\Supplier;
 use Src\Models\User;
 use Src\Common\Audit;
 use Src\Common\Logger;
+use Src\Common\Sanitizer; 
 
 class SupplierController
 {
@@ -70,6 +71,13 @@ class SupplierController
                 Response::error("Invalid JSON body.", 400);
                 return;
             }
+          
+            $input = Sanitizer::cleanArray($input);
+
+            
+            if (!Sanitizer::validateEmail($input['email'])) {
+                Response::error("Invalid email format.", 400); return;
+            }
 
             $requiredUser = ['username', 'email', 'password', 'role'];
             $requiredSupplier = ['name', 'address', 'phone'];
@@ -103,7 +111,7 @@ class SupplierController
             Response::json(['id' => $newSupplierId, 'userId' => $userId], 201, "Supplier created successfully.");
         } catch (\Exception $e) {
             Logger::error("SupplierController@create: " . $e->getMessage());
-            Response::error("Internal Server Error: " . $e->getMessage(), 500);
+            Response::error("Internal Server Error", 500);
         }
     }
 

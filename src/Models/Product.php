@@ -10,6 +10,7 @@ class Product
     public $brand;
     public $supplierId;
     public $price;
+    public $inStock; 
     public $createdAt;
     public $updatedAt;
 
@@ -63,37 +64,32 @@ class Product
                     Brand AS brand,
                     SupplierId AS supplierId,
                     Price AS price,
+                    InStock AS inStock,
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
-                FROM Products
-                WHERE ProductId = ?";
-
+                FROM Products WHERE ProductId = ?";
+        
         $stmt = $this->conn->prepare($sql);
-
         if (!$stmt) {
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
 
         $stmt->bind_param("i", $id);
-
-        if (!$stmt->execute()) {
-            throw new \Exception("DB execute failed: " . $stmt->error);
-        }
-
+        $stmt->execute();
+        
         $result = $stmt->get_result();
         $product = $result->fetch_assoc();
 
         $stmt->close();
 
-        return $product ?: null;
+        return $product;
     }
 
     // CREATE
     public function create(array $data)
     {
-        $sql = "INSERT INTO Products (Sku, Name, Category, Brand, SupplierId, Price, CreateAt, UpdateAt)
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
-
+        $sql = "INSERT INTO Products (Sku, Name, Category, Brand, SupplierId, Price, InStock, CreateAt, UpdateAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         $stmt = $this->conn->prepare($sql);
 
         if (!$stmt) {
@@ -104,11 +100,11 @@ class Product
         $name = $data['name'];
         $category = $data['category'];
         $brand = $data['brand'];
-        $supplierId = (int)$data['supplierId'];
-        $price = (float)$data['price'];
+        $supplierId = $data['supplierId'];
+        $price = $data['price'];
+        $inStock = $data['inStock'] ?? 0; 
 
-        // sku(s), name(s), category(s), brand(s), supplierId(i), price(d)
-        $stmt->bind_param("ssssid", $sku, $name, $category, $brand, $supplierId, $price);
+        $stmt->bind_param("ssssidi", $sku, $name, $category, $brand, $supplierId, $price, $inStock);
 
         if (!$stmt->execute()) {
             throw new \Exception("DB execute failed: " . $stmt->error);
@@ -119,35 +115,21 @@ class Product
 
         return $newId;
     }
-
-    // UPDATE (PUT/PATCH)
+    
+    // UPDATE
     public function update($id, array $data)
     {
         $fields = [];
         $values = [];
-        $types  = "";
+        $types = "";
 
-        $allowed = ['sku', 'name', 'category', 'brand', 'supplierId', 'price'];
+        $allowed = ['sku', 'name', 'category', 'brand', 'supplierId', 'price', 'inStock'];
 
         foreach ($allowed as $field) {
             if (isset($data[$field])) {
-                $column = match ($field) {
-                    'supplierId' => 'SupplierId',
-                    default => ucfirst($field),
-                };
-
-                $fields[] = $column . " = ?";
-
-                if ($field === 'supplierId') {
-                    $values[] = (int)$data[$field];
-                    $types .= "i";
-                } elseif ($field === 'price') {
-                    $values[] = (float)$data[$field];
-                    $types .= "d";
-                } else {
-                    $values[] = $data[$field];
-                    $types .= "s";
-                }
+                $fields[] = ucfirst($field) . " = ?";
+                $values[] = $data[$field];
+                $types .= ($field === 'price' ? 'd' : (($field === 'supplierId' || $field === 'inStock') ? 'i' : 's'));
             }
         }
 
@@ -156,10 +138,10 @@ class Product
         }
 
         $sql = "UPDATE Products SET " . implode(", ", $fields) . ", UpdateAt = NOW()
-                WHERE ProductId = ?";
+            WHERE ProductId = ?";
 
         $stmt = $this->conn->prepare($sql);
-
+        
         if (!$stmt) {
             throw new \Exception("DB prepare failed: " . $this->conn->error);
         }
@@ -176,6 +158,7 @@ class Product
         return $affected;
     }
 
+    // DELETE
     public function delete($id)
     {
         $sql = "DELETE FROM Products WHERE ProductId = ?";
@@ -194,4 +177,24 @@ class Product
 
         return $affected;
     }
+
+    public function addStock(int $id, int $quantity): bool
+    {
+        $sql = "UPDATE Products SET InStock = InStock + ?, UpdateAt = NOW() WHERE ProductId = ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception("DB prepare failed: " . $this->conn->error);
+        }
+
+        $stmt->bind_param("ii", $quantity, $id); 
+        if (!$stmt->execute()) {
+             throw new \Exception("DB execute failed: " . $stmt->error);
+        }
+
+        $affected = $stmt->affected_rows > 0;
+        $stmt->close();
+        return $affected;
+    }
 }
+    

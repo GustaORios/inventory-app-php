@@ -23,3 +23,25 @@
 [2025-12-14 20:57:55][INFO] Product deleted. ID: 32
 [2025-12-14 21:14:30][INFO] Product deleted. ID: 31
 [2025-12-14 21:34:13][ERROR] PurchaseOrderController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'WHERE SupplierId = ?' at line 11
+[2025-12-14 03:36:34][ERROR] SupplierController@create: Data truncated for column 'Status' at row 1
+[2025-12-14 03:38:50][INFO] Supplier created. ID: 11
+[2025-12-14 03:41:45][ERROR] ProductController@create: Unknown column 'InStock' in 'field list'
+[2025-12-14 03:56:32][INFO] Product created. ID: 33
+[2025-12-14 04:01:56][ERROR] PurchaseOrderController@create: Table 'inventory-procurement-spa.orderitems' doesn't exist
+[2025-12-14 04:04:37][ERROR] PurchaseOrderController@create: Table 'inventory-procurement-spa.orderitems' doesn't exist
+[2025-12-14 04:08:02][ERROR] PurchaseOrderController@create: Unknown column 'UnitPrice' in 'field list'
+[2025-12-14 04:10:45][ERROR] PurchaseOrderController@create: Unknown column 'Unit_Price' in 'field list'
+[2025-12-14 04:11:22][ERROR] PurchaseOrderController@create: Unknown column 'unitPrice' in 'field list'
+[2025-12-14 04:12:12][ERROR] PurchaseOrderController@create: Unknown column 'unitPrice' in 'field list'
+[2025-12-14 04:13:47][ERROR] PurchaseOrderController@create: Unknown column 'unitPrice' in 'field list'
+[2025-12-14 04:16:58][ERROR] PurchaseOrderController@create: Unknown column 'Unit_Price' in 'field list'
+[2025-12-14 04:17:01][ERROR] PurchaseOrderController@create: Unknown column 'Unit_Price' in 'field list'
+[2025-12-14 04:17:17][ERROR] PurchaseOrderController@create: Unknown column 'Unit_Price' in 'field list'
+[2025-12-14 04:19:08][INFO] PurchaseOrder created. ID: 23
+[2025-12-14 04:20:03][ERROR] PurchaseOrderController@create: Cannot add or update a child row: a foreign key constraint fails (`inventory-procurement-spa`.`purchaseorder`, CONSTRAINT `PurchaseOder_SupplierId` FOREIGN KEY (`SupplierId`) REFERENCES `suppliers` (`SupplierId`) ON DELETE RESTRICT ON UPDATE CASCADE)
+[2025-12-14 04:20:27][ERROR] PurchaseOrderController@create: Cannot add or update a child row: a foreign key constraint fails (`inventory-procurement-spa`.`purchaseorder`, CONSTRAINT `PurchaseOder_SupplierId` FOREIGN KEY (`SupplierId`) REFERENCES `suppliers` (`SupplierId`) ON DELETE RESTRICT ON UPDATE CASCADE)
+[2025-12-14 04:20:50][INFO] PurchaseOrder created. ID: 26
+[2025-12-14 04:30:42][INFO] Product updated. ID: 26
+[2025-12-14 04:30:55][INFO] Product updated. ID: 26
+[2025-12-14 06:13:09][INFO] Supplier created. ID: 12
+[2025-12-14 06:14:04][INFO] Product created. ID: 34

@@ -57,19 +57,17 @@ class Supplier
         }
 
         $stmt->bind_param("i", $id);
-
-        if (!$stmt->execute()) {
-            throw new \Exception("DB execute failed: " . $stmt->error);
-        }
+        $stmt->execute();
 
         $result = $stmt->get_result();
         $supplier = $result->fetch_assoc();
 
         $stmt->close();
 
-        return $supplier ?: null;
+        return $supplier;
     }
 
+    // CREATE
     public function create(array $data)
     {
         $sql = "INSERT INTO suppliers (UserId, Name, Email, Address, Phone, CreateAt, UpdateAt)
@@ -138,8 +136,6 @@ class Supplier
         $sql = "DELETE FROM suppliers WHERE SupplierId = ?";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
 
         return $stmt->affected_rows > 0;
     }
