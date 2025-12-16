@@ -16,7 +16,7 @@ class Response {
             unset($response['data']); 
         }
 
-        echo json_encode($response);
+        echo json_encode($response,JSON_PRETTY_PRINT);
         exit;
     }
     

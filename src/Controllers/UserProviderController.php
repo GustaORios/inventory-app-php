@@ -101,6 +101,7 @@ class UserProviderController
         try {
             if (isset($_SESSION['userinfo']['username'])) {
                 $email = $_SESSION['userinfo']['username'];
+                session_unset();
                 session_destroy();
                 Response::json(['message' => 'Logout successful.'], 200, 'Bye '. $email);
             } else {
@@ -109,6 +110,29 @@ class UserProviderController
 
         } catch (\Exception $e) {
             Logger::error("UserProviderController@logout: " . $e->getMessage());
+            Response::error("Internal Server Error: " . $e->getMessage(), 500);
+        }
+    }
+
+    public function getMe(){
+        try {
+
+            AccessControl::enforceRoles([
+                AccessControl::ROLE_MANAGER,
+                AccessControl::ROLE_PICKER,
+                AccessControl::ROLE_SUPPLIER,
+                AccessControl::ROLE_ADMIN
+            ]); // validate if role is allowed to access this resource
+
+            if (isset($_SESSION['userinfo']['id'])) {
+                Response::json(['user' => $_SESSION['userinfo']], 200, "Hello " . $_SESSION['userinfo']['email']);
+                
+            } else {
+                Response::error("No active session found.", 400);
+            }
+
+        } catch (\Exception $e) {
+            Logger::error("UserProviderController@getMe: " . $e->getMessage());
             Response::error("Internal Server Error: " . $e->getMessage(), 500);
         }
     }

@@ -63,6 +63,8 @@ $router->add('DELETE', '/products/:id', 'ProductController@delete');
 $router->add('POST', '/auth/login', 'UserProviderController@login');
 $router->add('POST', '/auth/logout', 'UserProviderController@logout');
 $router->add('POST', '/auth/register', 'UserProviderController@register');
+$router->add('GET', '/auth/me', 'UserProviderController@getMe');
+
 // Dashboard Router
 $router->add('GET', '/dashboard/summary', 'DashboardController@getSummary');
 $router->add('GET', '/dashboard', 'DashboardController@getSummary');
