@@ -1,0 +1,617 @@
+openapi: 3.0.0
+info:
+  title: Inventory Management System API
+  description: "API documentation for the Inventory Management System covering Users, Suppliers, Products, and Purchase Orders."
+  version: 1.0.0
+servers:
+- url: http://localhost/api
+  description: Local Development Server
+security:
+- cookieAuth: []
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register a new user
+      description: Access restricted to Manager and Admin.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterRequest"
+        required: true
+      responses:
+        "201":
+          description: User created successfully
+        "400":
+          description: Invalid role or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login user
+      description: Authenticates user and starts a PHP session.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid email or password
+      security: []
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout user
+      description: Destroys the active session.
+      responses:
+        "200":
+          description: Logout successful
+  /suppliers:
+    get:
+      tags:
+      - Suppliers
+      summary: Get all suppliers
+      responses:
+        "200":
+          description: List of suppliers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200"
+    post:
+      tags:
+      - Suppliers
+      summary: Create a new supplier
+      description: Creates both a User record and a Supplier record.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Supplier created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_201"
+  /suppliers/{id}:
+    get:
+      tags:
+      - Suppliers
+      summary: Get supplier by ID
+      parameters:
+      - name: id
+        in: path
+        description: Supplier ID
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Supplier details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+        "404":
+          description: Supplier not found
+    put:
+      tags:
+      - Suppliers
+      summary: Update supplier
+      parameters:
+      - name: id
+        in: path
+        description: Supplier ID
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/suppliers_id_body"
+        required: true
+      responses:
+        "200":
+          description: Supplier updated successfully
+    delete:
+      tags:
+      - Suppliers
+      summary: Delete supplier
+      parameters:
+      - name: id
+        in: path
+        description: Supplier ID
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Supplier deleted successfully
+        "404":
+          description: Supplier not found
+  /products:
+    get:
+      tags:
+      - Products
+      summary: Get all products
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_1"
+    post:
+      tags:
+      - Products
+      summary: Create a new product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_201_1"
+  /products/{id}:
+    get:
+      tags:
+      - Products
+      summary: Get product by ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    put:
+      tags:
+      - Products
+      summary: Update product
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+        required: true
+      responses:
+        "200":
+          description: Product updated
+    delete:
+      tags:
+      - Products
+      summary: Delete product
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Product deleted
+  /purchase-orders:
+    get:
+      tags:
+      - PurchaseOrders
+      summary: Get all purchase orders
+      description: "If logged in as Supplier, returns only their orders."
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_2"
+    post:
+      tags:
+      - PurchaseOrders
+      summary: Create a purchase order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_201_1"
+  /purchase-orders/{id}:
+    get:
+      tags:
+      - PurchaseOrders
+      summary: Get order by ID
+      description: Returns order details and associated items.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+    put:
+      tags:
+      - PurchaseOrders
+      summary: Update order status or details
+      description: "If status is changed to 'RECEIVED', product stock is automatically incremented."
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/purchaseorders_id_body"
+      responses:
+        "200":
+          description: Order updated successfully
+    delete:
+      tags:
+      - PurchaseOrders
+      summary: Delete order
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Order deleted
+  /dashboard/summary:
+    get:
+      tags:
+      - Dashboard
+      summary: Get dashboard summary
+      description: "Returns inventory stats, low stock counts, and top supplier spending."
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_3"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+          - manager
+          - picker
+          - supplier
+          - admin
+        isActive:
+          type: boolean
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+          description: Linked User ID
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        brand:
+          type: string
+        supplierId:
+          type: integer
+        price:
+          type: number
+          format: float
+        inStock:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    PurchaseOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        supplierId:
+          type: integer
+        totalAmount:
+          type: number
+          format: float
+        status:
+          type: string
+          example: Pending
+        orderDate:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItem"
+    PurchaseOrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        lineTotal:
+          type: number
+    UserRegisterRequest:
+      required:
+      - email
+      - password
+      - role
+      - username
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum:
+          - manager
+          - picker
+          - supplier
+          - admin
+    LoginRequest:
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    SupplierCreateRequest:
+      required:
+      - address
+      - email
+      - name
+      - password
+      - phone
+      - role
+      - username
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          default: supplier
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+      description: Creating a supplier also creates a User account.
+    ProductCreateRequest:
+      required:
+      - name
+      - price
+      - sku
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        brand:
+          type: string
+        supplierId:
+          type: integer
+        price:
+          type: number
+        inStock:
+          type: integer
+    PurchaseOrderCreateRequest:
+      required:
+      - items
+      - supplierId
+      properties:
+        supplierId:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderCreateRequest_items"
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Error description
+    inline_response_200:
+      type: object
+      properties:
+        suppliers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Supplier"
+    inline_response_201:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+    suppliers_id_body:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+    inline_response_200_1:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+    inline_response_201_1:
+      type: object
+      properties:
+        id:
+          type: integer
+    inline_response_200_2:
+      type: object
+      properties:
+        purchaseOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrder"
+    purchaseorders_id_body:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - Pending
+          - Received
+          - Cancelled
+        totalAmount:
+          type: number
+    inline_response_200_3:
+      type: object
+      properties:
+        inventory:
+          $ref: "#/components/schemas/inline_response_200_3_inventory"
+        lowStockCount:
+          type: integer
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/inline_response_200_3_orders"
+        topSupplierSpend:
+          type: array
+          items:
+            $ref: "#/components/schemas/inline_response_200_3_topSupplierSpend"
+    PurchaseOrderCreateRequest_items:
+      required:
+      - productId
+      - quantity
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+    inline_response_200_3_inventory:
+      type: object
+      properties:
+        totalProducts:
+          type: integer
+        inventoryValue:
+          type: number
+    inline_response_200_3_orders:
+      type: object
+      properties:
+        Status:
+          type: string
+        count:
+          type: integer
+    inline_response_200_3_topSupplierSpend:
+      type: object
+      properties:
+        supplierName:
+          type: string
+        totalSpent:
+          type: number
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      name: PHPSESSID
+      in: cookie
