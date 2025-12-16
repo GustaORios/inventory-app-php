@@ -380,6 +380,8 @@ components:
           format: float
         inStock:
           type: integer
+        NextExpirationDate:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -489,6 +491,8 @@ components:
           type: number
         inStock:
           type: integer
+        NextExpirationDate:
+          type: string
     PurchaseOrderCreateRequest:
       required:
       - items
