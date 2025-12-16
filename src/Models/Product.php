@@ -24,6 +24,14 @@ class Product
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->conn instanceof \mysqli) {
+            $this->conn->close();
+        }
+    }
+
+
     // GET ALL
     public function getAll()
     {

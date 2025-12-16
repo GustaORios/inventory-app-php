@@ -14,6 +14,14 @@ class PurchaseOrder
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->conn instanceof \mysqli) {
+            $this->conn->close();
+        }
+    }
+
+
     private function getSupplierIdIfSupplier(): ?int
     {
         if (isset($_SESSION['userinfo']['role']) && $_SESSION['userinfo']['role'] === 'supplier') {

@@ -16,6 +16,13 @@ class User
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->conn instanceof \mysqli) {
+            $this->conn->close();
+        }
+    }
+    
     public function create(array $data)
     {
         //Validate if email already exists
