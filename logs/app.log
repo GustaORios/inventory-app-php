@@ -45,3 +45,24 @@
 [2025-12-14 04:30:55][INFO] Product updated. ID: 26
 [2025-12-14 06:13:09][INFO] Supplier created. ID: 12
 [2025-12-14 06:14:04][INFO] Product created. ID: 34
+[2025-12-16 20:21:39][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:22:26][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:22:35][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:23:34][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:23:39][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:23:49][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:25:28][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:25:39][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:27:14][ERROR] ProductController@create: Field 'NextExpirationDate' doesn't have a default value
+[2025-12-16 20:28:01][INFO] Product created. ID: 33
+[2025-12-16 20:35:55][INFO] Product deleted. ID: 33
+[2025-12-16 20:36:01][ERROR] ProductController@create: Column count doesn't match value count at row 1
+[2025-12-16 20:40:34][INFO] Product created. ID: 34
+[2025-12-16 20:42:43][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 13
+[2025-12-16 20:43:05][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 13
+[2025-12-16 20:43:45][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 13
+[2025-12-16 20:43:55][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 13
+[2025-12-16 20:44:02][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 12
+[2025-12-16 20:44:03][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 12
+[2025-12-16 20:44:47][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 11
+[2025-12-16 20:44:51][ERROR] ProductController@getAll: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM Products' at line 11

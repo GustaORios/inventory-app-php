@@ -24,6 +24,14 @@ class Product
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->conn instanceof \mysqli) {
+            $this->conn->close();
+        }
+    }
+
+
     // GET ALL
     public function getAll()
     {
@@ -35,6 +43,8 @@ class Product
                     Brand AS brand,
                     SupplierId AS supplierId,
                     Price AS price,
+                    inStock AS inStock,
+                    NextExpirationDate AS NextExpirationDate,
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM Products";
@@ -65,6 +75,7 @@ class Product
                     SupplierId AS supplierId,
                     Price AS price,
                     InStock AS inStock,
+                    NextExpirationDate as NextExpirationDate,
                     CreateAt AS createdAt,
                     UpdateAt AS updatedAt
                 FROM Products WHERE ProductId = ?";
@@ -88,8 +99,8 @@ class Product
     // CREATE
     public function create(array $data)
     {
-        $sql = "INSERT INTO Products (Sku, Name, Category, Brand, SupplierId, Price, InStock, CreateAt, UpdateAt) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO Products (Sku, Name, Category, Brand, SupplierId, Price, InStock, NextExpirationDate, CreateAt, UpdateAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         $stmt = $this->conn->prepare($sql);
 
         if (!$stmt) {
@@ -103,8 +114,9 @@ class Product
         $supplierId = $data['supplierId'];
         $price = $data['price'];
         $inStock = $data['inStock'] ?? 0; 
+        $expDate = $data['NextExpirationDate'] ?? null; 
 
-        $stmt->bind_param("ssssidi", $sku, $name, $category, $brand, $supplierId, $price, $inStock);
+        $stmt->bind_param("ssssidis", $sku, $name, $category, $brand, $supplierId, $price, $inStock, $expDate);
 
         if (!$stmt->execute()) {
             throw new \Exception("DB execute failed: " . $stmt->error);
