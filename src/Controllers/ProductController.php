@@ -1,6 +1,8 @@
 <?php
+
 namespace Src\Controllers;
 
+use function Src\Common\require_auth;
 use Src\Common\AccessControl;
 use Src\Common\Response;
 use Src\Models\Product;
@@ -10,20 +12,32 @@ use Src\Common\Logger;
 class ProductController
 {
     private $productModel;
+    private $conn;
 
     public function __construct()
     {
         $this->productModel = new Product();
+        $this->conn = require __DIR__ . '/../Common/config.php';
+
+        if (!($this->conn instanceof \mysqli)) {
+            throw new \Exception("Database connection not available. Check config.php");
+        }
     }
 
     public function getAll()
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_PICKER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_PICKER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $products = $this->productModel->getAll();
             Response::json(['products' => $products], 200, "List of products fetched successfully.");
@@ -36,13 +50,17 @@ class ProductController
     public function getById($id)
     {
         try {
+            $userId = require_auth($this->conn);
 
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_PICKER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
-
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_PICKER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $product = $this->productModel->getById($id);
 
@@ -60,15 +78,18 @@ class ProductController
     public function create()
     {
         try {
+            $userId = require_auth($this->conn);
 
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_PICKER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
-
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_PICKER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $input = json_decode(file_get_contents("php://input"), true);
-
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
                 return;
@@ -96,10 +117,16 @@ class ProductController
     public function delete($id)
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_PICKER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_PICKER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $deleted = $this->productModel->delete($id);
 
@@ -118,15 +145,18 @@ class ProductController
     public function update($id)
     {
         try {
+            $userId = require_auth($this->conn);
 
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_PICKER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
-
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_PICKER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $input = json_decode(file_get_contents("php://input"), true);
-
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
                 return;
