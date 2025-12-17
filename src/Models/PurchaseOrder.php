@@ -6,10 +6,11 @@ class PurchaseOrder
 {
     private $conn;
 
-    public function __construct()
+   
+     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
-        if (!isset($conn) || !($conn instanceof \mysqli)) {
+        if (!isset($this->conn) || !($this->conn instanceof \mysqli)) {
             throw new \Exception("Database connection not available. Check config.php");
         }
     }

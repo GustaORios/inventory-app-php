@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../src/Common/helpers.php';
+require_once __DIR__ . '/../src/Common/auth_token.php';
+
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);

@@ -2,32 +2,45 @@
 
 namespace Src\Controllers;
 
+use function Src\Common\require_auth;
 use Src\Common\AccessControl;
 use Src\Common\Response;
 use Src\Models\Supplier;
 use Src\Models\User;
 use Src\Common\Audit;
 use Src\Common\Logger;
-use Src\Common\Sanitizer; 
+use Src\Common\Sanitizer;
 
 class SupplierController
 {
     private $supplierModel;
     private $userModel;
+    private $conn;
 
     public function __construct()
     {
         $this->supplierModel = new Supplier();
         $this->userModel = new User();
+        $this->conn = require __DIR__ . '/../Common/config.php';
+
+        if (!($this->conn instanceof \mysqli)) {
+            throw new \Exception("Database connection not available. Check config.php");
+        }
     }
 
     public function getAll()
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $suppliers = $this->supplierModel->getAll();
             Response::json(['suppliers' => $suppliers], 200, "List of suppliers fetched successfully.");
@@ -40,10 +53,16 @@ class SupplierController
     public function getById($id)
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $supplier = $this->supplierModel->getById($id);
 
@@ -61,22 +80,28 @@ class SupplierController
     public function create()
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
                 return;
             }
-          
+
             $input = Sanitizer::cleanArray($input);
 
-            
-            if (!Sanitizer::validateEmail($input['email'])) {
-                Response::error("Invalid email format.", 400); return;
+            if (!isset($input['email']) || !Sanitizer::validateEmail($input['email'])) {
+                Response::error("Invalid email format.", 400);
+                return;
             }
 
             $requiredUser = ['username', 'email', 'password', 'role'];
@@ -96,10 +121,10 @@ class SupplierController
                 }
             }
 
-            $userId = $this->userModel->create($input);
+            $newUserId = $this->userModel->create($input);
 
             $newSupplierId = $this->supplierModel->create([
-                'userId'  => $userId,
+                'userId'  => $newUserId,
                 'name'    => $input['name'],
                 'email'   => $input['email'],
                 'address' => $input['address'],
@@ -108,7 +133,7 @@ class SupplierController
 
             Audit::created('Supplier', (int)$newSupplierId);
 
-            Response::json(['id' => $newSupplierId, 'userId' => $userId], 201, "Supplier created successfully.");
+            Response::json(['id' => $newSupplierId, 'userId' => $newUserId], 201, "Supplier created successfully.");
         } catch (\Exception $e) {
             Logger::error("SupplierController@create: " . $e->getMessage());
             Response::error("Internal Server Error", 500);
@@ -118,10 +143,16 @@ class SupplierController
     public function delete($id)
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
+            $userId = require_auth($this->conn);
+
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
 
             $deleted = $this->supplierModel->delete($id);
 
@@ -140,13 +171,18 @@ class SupplierController
     public function update($id)
     {
         try {
-            AccessControl::enforceRoles([
-                AccessControl::ROLE_MANAGER,
-                AccessControl::ROLE_ADMIN
-            ]); // validate if role is allowed to access this resource
-            
-            $input = json_decode(file_get_contents("php://input"), true);
+            $userId = require_auth($this->conn);
 
+            AccessControl::enforceRoles(
+                $this->conn,
+                $userId,
+                [
+                    AccessControl::ROLE_MANAGER,
+                    AccessControl::ROLE_ADMIN
+                ]
+            );
+
+            $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
                 Response::error("Invalid JSON body.", 400);
                 return;
