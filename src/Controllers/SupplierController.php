@@ -28,6 +28,13 @@ class SupplierController
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->conn instanceof \mysqli) {
+            $this->conn->close();
+        }
+    }
+
     public function getAll()
     {
         try {
