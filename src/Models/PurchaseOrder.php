@@ -167,7 +167,7 @@ class PurchaseOrder
         
         try {
             $orderSql = "INSERT INTO purchaseorder (SupplierId, TotalAmount, Status, OrderDate, CreateAt, UpdateAt) 
-                         VALUES (?, ?, 'Pending', CURDATE(), NOW(), NOW())";
+                         VALUES (?, ?, 'PENDING', CURDATE(), NOW(), NOW())";
             $orderStmt = $this->conn->prepare($orderSql);
             if (!$orderStmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
             $supplierId = $data['supplierId'];

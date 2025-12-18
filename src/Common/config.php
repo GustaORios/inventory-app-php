@@ -2,7 +2,7 @@
 
 $host = "localhost";
 $user = "PHP_AGENT"; 
-$password = "N4Qdu5[NDs2kcH_u"; 
+$password = "KYjf_1orRRw.mz[J"; 
 $dbname = "inventory-procurement-spa";
 $conn = new mysqli($host, $user, $password, $dbname);
 
