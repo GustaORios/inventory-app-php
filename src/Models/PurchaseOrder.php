@@ -6,10 +6,11 @@ class PurchaseOrder
 {
     private $conn;
 
-    public function __construct()
+   
+     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
-        if (!isset($conn) || !($conn instanceof \mysqli)) {
+        if (!isset($this->conn) || !($this->conn instanceof \mysqli)) {
             throw new \Exception("Database connection not available. Check config.php");
         }
     }
@@ -166,7 +167,7 @@ class PurchaseOrder
         
         try {
             $orderSql = "INSERT INTO purchaseorder (SupplierId, TotalAmount, Status, OrderDate, CreateAt, UpdateAt) 
-                         VALUES (?, ?, 'Pending', CURDATE(), NOW(), NOW())";
+                         VALUES (?, ?, 'PENDING', CURDATE(), NOW(), NOW())";
             $orderStmt = $this->conn->prepare($orderSql);
             if (!$orderStmt) throw new \Exception("DB prepare failed: " . $this->conn->error);
             $supplierId = $data['supplierId'];

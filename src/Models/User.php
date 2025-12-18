@@ -10,8 +10,7 @@ class User
     public function __construct()
     {
         $this->conn = require __DIR__ . '/../Common/config.php';
-
-        if (!isset($conn) || !($conn instanceof \mysqli)) {
+        if (!isset($this->conn) || !($this->conn instanceof \mysqli)) {
             throw new \Exception("Database connection not available. Check config.php");
         }
     }
@@ -66,7 +65,8 @@ class User
         return $newUserId;
     }
 
-    public function authenticate($email, $password){
+    public function authenticate($email, $password)
+    {
         $sql = "SELECT userId, Username, PasswordHash, Role, Email FROM users WHERE Email = ? AND IsActive = TRUE";
         $stmt = $this->conn->prepare($sql);
 
@@ -90,8 +90,8 @@ class User
             unset($user['PasswordHash']); // Remove password hash before returning user data
             return $user;
         } else {
-            return null; // Password does not match
             Logger::info("User@authenticate: Failed login attempt for email '{$email}'.");
+            return null; // Password does not match
         }
 
     }
